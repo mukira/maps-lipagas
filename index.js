@@ -117,14 +117,15 @@ locationInputField.addEventListener("blur", () => {
 
 setLocationBtn.addEventListener("click", () => {
   const input = document.getElementById("locationInput");
-  
-  if (!input.value.trim()) {
-    input.classList.add("highlight");
+  const wrapper = document.getElementById("searchContainer");
 
-    // Optional: remove the highlight after 2 seconds
-    setTimeout(() => input.classList.remove("highlight"), 2000);
+  if (!input.value.trim()) {
+    wrapper.classList.add("highlight");
+
+    // Remove highlight after 2 seconds
+    setTimeout(() => wrapper.classList.remove("highlight"), 2000);
   } else {
-    input.classList.remove("highlight");
-    // Your logic for when location is set
+    wrapper.classList.remove("highlight");
+    // Continue with your logic for setting location
   }
 });
