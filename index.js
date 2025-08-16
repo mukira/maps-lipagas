@@ -53,7 +53,7 @@ function initMap() {
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
-          alert("Please allow location access in your browser settings.");
+          alert("Please allow location access in your browser settings or type your location above.");
         } else {
           alert("Failed to retrieve location. Try again.");
         }
