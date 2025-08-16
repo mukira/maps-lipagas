@@ -1,6 +1,29 @@
 
 let map, autocomplete;
 
+let currentLocationLabel = '';
+let currentLocation = null;
+
+const LIPAGAS_WA_NUMBER = '254112250250';
+
+function setLocation(label, lat, lng) {
+    currentLocationLabel = label;
+    currentLocation = { lat, lng };
+    if (lat && lng) {
+        document.querySelector('button.set-location-btn').removeAttribute('disabled');
+    }
+}
+
+function sendCurrentLocationToWhatsApp() {
+    if (currentLocation !== null) {
+        const { lat, lng } = currentLocation;
+        window.location = `https://wa.me/${LIPAGAS_WA_NUMBER}?text=${currentLocationLabel}%0A${lat},${lng}`;
+    }
+    else {
+        alert('Select your delivery location');
+    }
+}
+
 function initMap() {
   const defaultLoc = { lat: -1.271, lng: 36.804 };
 
@@ -16,7 +39,6 @@ function initMap() {
 
   const marker = new google.maps.Marker({
     map,
-    position: defaultLoc,
     draggable: true
   });
 
@@ -25,6 +47,14 @@ function initMap() {
     if (!place.geometry) return;
     map.panTo(place.geometry.location);
     marker.setPosition(place.geometry.location);
+    setLocation(place.name, place.geometry.location.lat(), place.geometry.location.lng());
+  });
+
+  marker.addListener('dragend', () => {
+      const position = marker.position;
+      map.panTo(position);
+      marker.setPosition(position);
+      setLocation('Custom Location', position.lat(), position.lng());
   });
 
   document.getElementById("locateBtn").addEventListener("click", () => {
@@ -40,8 +70,9 @@ function initMap() {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
-        map.setCenter(loc);
+        map.panTo(loc);
         marker.setPosition(loc);
+        setLocation('Current Location', loc.lat, loc.lng);
 
         // Reverse geocode to get the address
         const geocoder = new google.maps.Geocoder();
@@ -67,7 +98,9 @@ function initMap() {
     );
   });
 
-
+    document.querySelector("button.set-location-btn").addEventListener("click", () => {
+        sendCurrentLocationToWhatsApp();
+    });
 }
 
 if ("serviceWorker" in navigator) {
