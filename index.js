@@ -57,46 +57,48 @@ function initMap() {
       setLocation('Custom Location', position.lat(), position.lng());
   });
 
-  document.getElementById("locateBtn").addEventListener("click", () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      return;
-    }
-
-    // Ask for permission
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const loc = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-        map.panTo(loc);
-        marker.setPosition(loc);
-        setLocation('Current Location', loc.lat, loc.lng);
-
-        // Reverse geocode to get the address
-        const geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ location: loc }, (results, status) => {
-          if (status === "OK" && results[0]) {
-            document.getElementById("locationInput").value = results[0].formatted_address;
-          }
-        });
-      },
-      (error) => {
-        if (error.code === error.PERMISSION_DENIED) {
-          alert("Please allow location access in your browser settings or type your location above.");
-        } else {
-          alert("Failed to retrieve location. Try again.");
+    /*
+    document.getElementById("locateBtn").addEventListener("click", () => {
+        if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
         }
-        console.error(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
-  });
+
+        // Ask for permission
+        navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const loc = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+            };
+            map.panTo(loc);
+            marker.setPosition(loc);
+            setLocation('Current Location', loc.lat, loc.lng);
+
+            // Reverse geocode to get the address
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: loc }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                document.getElementById("locationInput").value = results[0].formatted_address;
+            }
+            });
+        },
+        (error) => {
+            if (error.code === error.PERMISSION_DENIED) {
+            alert("Please allow location access in your browser settings or type your location above.");
+            } else {
+            alert("Failed to retrieve location. Try again.");
+            }
+            console.error(error);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+        );
+    });
+    */
 
     document.querySelector("button.set-location-btn").addEventListener("click", () => {
         sendCurrentLocationToWhatsApp();
@@ -123,24 +125,24 @@ clearBtn.addEventListener("click", () => {
 });
 
 const setLocationBtn = document.querySelector(".set-location-btn");
-const locateBtn = document.getElementById("locateBtn");
+// const locateBtn = document.getElementById("locateBtn");
 
 locationInputField.addEventListener("focus", () => {
   setLocationBtn.classList.add("keyboard-up");
-  locateBtn.classList.add("keyboard-up");
+  // locateBtn.classList.add("keyboard-up");
   mapContainer.classList.add("keyboard-blur");
 });
 
 locationInputField.addEventListener("blur", () => {
   setLocationBtn.classList.remove("keyboard-up");
-  locateBtn.classList.remove("keyboard-up");
+  // locateBtn.classList.remove("keyboard-up");
 });
 
 const mapContainer = document.getElementById("map");
 
 locationInputField.addEventListener("blur", () => {
   setLocationBtn.classList.remove("keyboard-up");
-  locateBtn.classList.remove("keyboard-up");
+  // locateBtn.classList.remove("keyboard-up");
   mapContainer.classList.remove("keyboard-blur");
 });
 
