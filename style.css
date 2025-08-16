@@ -1,0 +1,133 @@
+
+body, html {
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.input-wrapper {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  height: 60px;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 0 16px;
+  width: 85%;
+  max-width: 600px;
+  z-index: 2;
+}
+
+.input-wrapper input {
+  border: none;
+  outline: none;
+  font-size: 16px;
+  width: 100%;
+  padding: 12px 0;
+}
+
+.clear-btn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  margin-left: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+}
+
+.set-location-btn {
+  position: fixed;
+  width: 90%;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 18px 24px;
+  background-color: #047346;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.locate-btn {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  background-color: #047346;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Make the dropdown wider */
+.pac-container {
+  width: 90% !important; /* You can change to 100%, 85%, etc. */
+  left: 50% !important;
+  transform: translateX(-50%);
+  max-width: 600px;
+  z-index: 10000;
+  border-radius: 0 0 20px 20px; /* Square top, rounded bottom */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Optional shadow */
+  overflow: hidden;
+}
+
+.pac-item {
+  padding: 7px !important;
+  font-size: 16px !important;
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .set-location-btn {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .locate-btn {
+    bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+}
+
+.set-location-btn.keyboard-up {
+  bottom: 300px;
+}
+
+.locate-btn.keyboard-up {
+  bottom: 380px;
+}
+
+.set-location-btn,
+.locate-btn {
+  transition: bottom 0.3s ease-in-out;
+}
+
+#map.keyboard-blur {
+  filter: blur(6px);
+  transition: filter 0.3s ease-in-out;
+}
