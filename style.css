@@ -6,6 +6,12 @@ body, html {
   font-family: Arial, sans-serif;
 }
 
+.input-wrapper input.highlight {
+  border: 2px solid #00c853; /* Green highlight */
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.3); /* Optional subtle glow */
+}
+
+
 #map {
   height: 100%;
   width: 100%;

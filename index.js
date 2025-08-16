@@ -114,3 +114,17 @@ locationInputField.addEventListener("blur", () => {
 locationInputField.addEventListener("blur", () => {
   mapContainer.classList.remove("keyboard-blur");
 });
+
+setLocationBtn.addEventListener("click", () => {
+  const input = document.getElementById("locationInput");
+  
+  if (!input.value.trim()) {
+    input.classList.add("highlight");
+
+    // Optional: remove the highlight after 2 seconds
+    setTimeout(() => input.classList.remove("highlight"), 2000);
+  } else {
+    input.classList.remove("highlight");
+    // Your logic for when location is set
+  }
+});
