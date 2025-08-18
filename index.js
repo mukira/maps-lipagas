@@ -17,7 +17,7 @@ function setLocation(label, lat, lng) {
 function sendCurrentLocationToWhatsApp() {
     if (currentLocation !== null) {
         const { lat, lng } = currentLocation;
-        window.location = `https://wa.me/${LIPAGAS_WA_NUMBER}?text=${currentLocationLabel}%0A${lat},${lng}`;
+        window.location = `https://wa.me/${LIPAGAS_WA_NUMBER}?text=${currentLocationLabel} ${lat},${lng}`;
     }
     else {
         alert('Select your delivery location');
