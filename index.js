@@ -57,7 +57,7 @@ function initMap() {
       setLocation('Custom Location', position.lat(), position.lng());
   });
 
-    /*
+  
     document.getElementById("locateBtn").addEventListener("click", () => {
         if (!navigator.geolocation) {
         alert("Geolocation is not supported by your browser.");
@@ -98,7 +98,7 @@ function initMap() {
         }
         );
     });
-    */
+  
 
     document.querySelector("button.set-location-btn").addEventListener("click", () => {
         sendCurrentLocationToWhatsApp();
