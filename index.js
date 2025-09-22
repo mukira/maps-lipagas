@@ -2,6 +2,49 @@ let map, autocomplete;
 let currentLocationLabel = '';
 let currentLocation = null;
 
+
+// === PWA helpers ===
+(function(){
+  // Register SW (if not already)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (!reg) navigator.serviceWorker.register('./sw.js').catch(console.warn);
+    });
+  }
+
+  // Online/offline banner
+  const banner = document.getElementById('netBanner');
+  function updateNetBanner(){
+    if (!banner) return;
+    const offline = !navigator.onLine;
+    banner.style.display = offline ? 'block' : 'none';
+  }
+  window.addEventListener('online', updateNetBanner);
+  window.addEventListener('offline', updateNetBanner);
+  updateNetBanner();
+})();
+
+// === Lazy-load Google Maps on first interaction (saves data on 3G) ===
+let mapsBootstrapped = false;
+function loadGoogleMapsOnce(){
+  if (mapsBootstrapped) return;
+  mapsBootstrapped = true;
+  const s = document.createElement('script');
+  s.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDDRWZ7Ay5MzeFMN6ue-6H-wqWFq6-gd7g&libraries=places&v=quarterly&callback=initMap";
+  s.defer = true; s.async = true;
+  document.head.appendChild(s);
+}
+
+// Kick off map only when needed
+window.addEventListener('DOMContentLoaded', () => {
+  const locateBtn = document.getElementById('locateBtn');
+  const input = document.getElementById('locationInput');
+  if (locateBtn) locateBtn.addEventListener('click', loadGoogleMapsOnce, { once: true });
+  if (input) {
+    input.addEventListener('focus', loadGoogleMapsOnce, { once: true });
+    input.addEventListener('click', loadGoogleMapsOnce, { once: true });
+  }
+});
 const LIPAGAS_WA_NUMBER = '254112250250';
 
 // --- Sheet refs ---
@@ -219,3 +262,13 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.initMap = initMap;
+
+
+// If Google calls initMap before our listeners, ensure it works
+window._initQueue = window._initQueue || [];
+const _origInit = window.initMap;
+window.initMap = function(){
+  if (typeof _origInit === 'function') return _origInit();
+  // If original declared later, queue
+  window._initQueue.push(() => _origInit && _origInit());
+};

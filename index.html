@@ -11,6 +11,12 @@
   <link rel="manifest" href="manifest.json" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://maps.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://maps.gstatic.com" crossorigin>
+  <noscript><style>#map{filter:grayscale(1)} .set-location-btn{display:none}</style></noscript>
 </head>
 
 <body>
@@ -37,9 +43,6 @@
   </button>
 
   <script src="index.js" defer></script>
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDRWZ7Ay5MzeFMN6ue-6H-wqWFq6-gd7g&libraries=places&callback=initMap">
-    </script>
   <!-- HINT under the search bar -->
   <div id="searchHint" class="search-hint" aria-live="polite">
     Tip: Start typing your address or tap the target to use GPS.
@@ -92,6 +95,15 @@
       </footer>
     </section>
   </div>
+<div id="netBanner" class="net-banner" aria-live="polite" style="display:none">You’re offline. Some features may be unavailable.</div>
+  <script>
+    // Minimal SW registration (kept here as a fallback; main logic in index.js)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function(){
+        navigator.serviceWorker.register('./sw.js').catch(console.warn);
+      });
+    }
+  </script>
 </body>
 
 </html>
