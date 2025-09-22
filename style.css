@@ -137,3 +137,179 @@ body, html {
   filter: blur(6px);
   transition: filter 0.3s ease-in-out;
 }
+
+/* --- Hints & emphasis --- */
+.search-hint {
+  position: absolute;
+  top: 106px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.96);
+  border-radius: 16px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #2b3a33;
+  box-shadow: 0 4px 10px rgba(0,0,0,.08);
+  z-index: 2;
+}
+
+
+  70% { box-shadow: 0 0 0 12px rgba(4,115,70,0); }
+  100% { box-shadow: 0 0 0 0 rgba(4,115,70,0); }
+}
+
+/* --- Primary CTA disabled state --- */
+.set-location-btn[disabled] {
+  opacity: .55;
+  filter: grayscale(.2);
+  cursor: not-allowed;
+}
+
+/* --- Stepper footer --- */
+.stepper {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 108px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(6px);
+  border-radius: 999px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+  z-index: 3;
+}
+.stepper .divider {
+  width: 1px; height: 18px; background: #e5e7eb;
+}
+.stepper .step {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: #4b5563;
+}
+.stepper .step .dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #9ca3af;
+}
+.stepper .step.active { color: #047346; font-weight: 600; }
+.stepper .step.active .dot { background: #047346; }
+
+/* --- Coachmark overlay --- */
+.coachmark {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,.35);
+  display: grid; place-items: center;
+}
+.coachmark[hidden] { display: none; }
+.coach-card {
+  width: min(92%, 520px);
+  background: #ffffff; color: #111827;
+  border-radius: 20px; padding: 20px 18px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.18);
+}
+.coach-card h3 { margin: 0 0 6px; font-size: 18px; }
+.coach-card p { margin: 0 0 14px; font-size: 14px; color: #374151; }
+.coach-cta {
+  width: 100%;
+  border: none; border-radius: 12px;
+  padding: 12px 16px; font-size: 15px;
+  background: #047346; color: #fff;
+}
+
+/* lift hint on keyboard */
+.set-location-btn.keyboard-up + .stepper { bottom: 368px; }
+
+/* === Bottom Sheet === */
+.sheet.hidden { display: none; }
+.sheet { position: fixed; inset: 0; z-index: 10000; }
+
+.sheet-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.36);
+  opacity: 0; transition: opacity .22s ease;
+}
+
+.sheet-panel {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: #fff; border-radius: 20px 20px 0 0;
+  box-shadow: 0 -10px 30px rgba(0,0,0,.18);
+  transform: translateY(100%); transition: transform .28s ease;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sheet.open .sheet-backdrop { opacity: 1; }
+.sheet.open .sheet-panel { transform: translateY(0); }
+
+.sheet-header { padding: 12px 16px 4px; text-align: center; }
+.sheet-handle {
+  width: 48px; height: 5px; border-radius: 999px;
+  background: #e5e7eb; margin: 6px auto 10px;
+}
+.sheet-header h3 { margin: 0; font-size: 16px; color: #111827; }
+
+.sheet-body { padding: 10px 16px 4px; }
+.sheet-row { display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 10px 0; }
+.sheet-label { font-size: 13px; color: #6b7280; }
+.sheet-value { font-size: 15px; color: #111827; word-break: break-word; }
+
+.sheet-change {
+  margin-top: 8px;
+  background: transparent; border: 1px solid #e5e7eb;
+  border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #374151;
+}
+
+.sheet-footer {
+  padding: 12px 16px 18px;
+  position: sticky; bottom: 0; background: #fff; border-top: 1px solid #f3f4f6;
+}
+.sheet-confirm {
+  width: 100%; border: none; border-radius: 12px;
+  padding: 14px 16px; font-size: 16px;
+  background: #047346; color: #fff;
+}
+
+/* lift your existing floating buttons while sheet is open */
+.sheet.open ~ .set-location-btn,
+.sheet.open ~ .locate-btn { transform: translateX(-50%) translateY(-110px); }
+
+/* Stronger pulse effect for the input wrapper */
+.input-wrapper.pulse {
+  animation: pulse-strong 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-strong {
+  0% {
+    box-shadow: 0 0 0 0 rgba(4, 115, 70, 0.6);
+    border: 2px solid #00c853;
+  }
+  50% {
+    box-shadow: 0 0 0 18px rgba(4, 115, 70, 0);
+    border: 2px solid #00e676;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(4, 115, 70, 0);
+    border: 2px solid #00c853;
+  }
+}
+
+/* --- Dark glass overlay over map --- */
+.map-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45); /* dark glass */
+  backdrop-filter: blur(3px);
+  z-index: 1; /* above map, below input */
+  transition: opacity 0.4s ease;
+}
+
+.map-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#locationInput {
+  max-width: 80%;          /* ensures it stays inside wrapper */
+  white-space: nowrap;      /* prevent multi-line breaking */
+  overflow: hidden;         /* hide the overflow text */
+  text-overflow: ellipsis;  /* show "…" when too long */
+}
