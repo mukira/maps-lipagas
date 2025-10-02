@@ -1,109 +1,781 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#004d40" />
-  <link rel="icon" href="https://lipagas.co/files/logos-iccon.png" media="(prefers-color-scheme: light)" />
-  <link rel="icon" href="https://lipagas.co/files/logos-iccon.png" media="(prefers-color-scheme: dark)" />
-  <title>LipaGas - Location Picker</title>
-  <link rel="manifest" href="manifest.json" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-<meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="preconnect" href="https://maps.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://maps.gstatic.com" crossorigin>
-  <noscript><style>#map{filter:grayscale(1)} .set-location-btn{display:none}</style></noscript>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LipaGas Location Sharer</title>
+    <!-- Tailwind CSS CDN for modern, mobile-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- User-provided Material Symbols link for variable font axes -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=location_on" />
+
+    <!-- Lucide Icons for clean UI elements -->
+    <script type="module">
+      import { createIcons, MapPin, Search, LocateFixed, X, Check, ArrowLeft, ArrowUp } from 'https://unpkg.com/lucide@latest/dist/esm/lucide.js';
+      createIcons({ icons: { MapPin, Search, LocateFixed, X, Check, ArrowLeft, ArrowUp } });
+    </script>
+
+    <style>
+        :root {
+            --lipagas-green: #047346;
+            --lipagas-green-light: #069c5e;
+            /* Added WhatsApp Colors */
+            --whatsapp-green: #25D366; 
+            --whatsapp-green-dark: #1DA851; 
+            
+            /* Stronger shadow for elevation, similar to native apps */
+            --shadow-strong: 0 8px 30px rgba(0, 0, 0, 0.2); 
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #f7f9fc;
+            overflow: hidden; 
+        }
+
+        /* 1. Map Container Styling */
+        #map {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 100%;
+            background-color: #e5e5e5;
+            z-index: 1; 
+        }
+
+        /* 2. Bottom Sheet: Animation - Slides from 100% (off-screen) to 0% (on-screen) */
+        #bottomSheet {
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); 
+            transform: translateY(100%);
+            z-index: 50; 
+            max-height: 85vh; 
+            overflow-y: auto;
+        }
+        #bottomSheet.open {
+            transform: translateY(0);
+        }
+        
+        /* 3. Floating Button Animation */
+        #confirmLocationFAB.hidden-fab {
+            opacity: 0;
+            transform: translateY(2rem); 
+            pointer-events: none;
+        }
+        #confirmLocationFAB {
+            transition: opacity 0.3s, transform 0.3s, background-color 0.1s;
+            width: 100%; 
+        }
+
+        /* 4. FAB Container: Fixed position, keyboard lift, and centered/max-width */
+        #fabContainer {
+            position: fixed; 
+            transition: bottom 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            z-index: 40;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 2rem); /* p-4 on either side = 2rem */
+            max-width: 32rem; 
+        }
+
+        /* 5. Google Maps Autocomplete overrides for clean look and matching width/style */
+        .pac-container {
+            /* Positioning and Width Alignment for pixel perfection with search bar */
+            left: 50% !important; 
+            transform: translateX(-50%) !important;
+            width: calc(100% - 2rem) !important; 
+            max-width: 32rem !important; 
+            margin-top: 8px !important; /* Slightly more space below the search bar */
+            
+            /* Style Overrides */
+            font-family: 'Inter', sans-serif;
+            z-index: 1000 !important; 
+            border-radius: 12px !important; /* Rounded corners match search bar */
+            padding: 8px 0 !important; /* Increased vertical padding for content */
+            box-shadow: var(--shadow-strong);
+            border: none !important; 
+        }
+        
+        .pac-item {
+            /* Increased padding for better touch targets */
+            padding: 14px 16px !important; 
+            cursor: pointer;
+            border-top: 1px solid #f0f0f0; 
+            transition: background-color 0.1s;
+            /* Use flex-like properties to help align the children vertically */
+            display: flex;
+            align-items: center; /* This helps align the overall content block */
+        }
+        .pac-item:first-child {
+            border-top: none; /* No border on the first item */
+        }
+
+        .pac-item:hover, .pac-item-selected {
+            background-color: #f3f4f6 !important; /* Lighter highlight */
+        }
+
+        /* CRITICAL: Material Symbol Icon Injection and Styling */
+        .pac-icon {
+            background-image: none !important;
+            background-color: transparent !important;
+            width: 24px !important;
+            height: 24px !important;
+            margin: 0 16px 0 0 !important;
+            display: inline-block !important; 
+            line-height: 1; 
+            vertical-align: middle !important; /* Enforce middle alignment on the table cell */
+        }
+
+        .pac-icon::before {
+            content: "location_on";
+            font-family: 'Material Symbols Outlined';
+            font-size: 22px !important; /* Icon size */
+            color: var(--lipagas-green) !important;
+            font-variation-settings:
+              'FILL' 0,
+              'wght' 600,
+              'GRAD' 0,
+              'opsz' 24;
+            display: block;
+            position: relative;
+            top: 2px; /* Final pixel adjustment down to center with the mixed font sizes */
+        }
+
+        /* ---------------------------------------------------------------------- */
+
+
+        .pac-item-query {
+            /* Style the main, bold part of the result */
+            font-size: 1rem;
+            font-weight: 700; /* Bold */
+            color: #1f2937; 
+        }
+        
+        .pac-item span:not(.pac-item-query) {
+            /* Style the secondary, lighter text */
+            font-size: 0.875rem; /* text-sm */
+            color: #6b7280; 
+            font-weight: 500;
+        }
+        
+        /* 6. Tutorial Overlay Styles */
+        #tutorialOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); 
+            z-index: 100; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 20px;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        #tutorialOverlay.hidden {
+            display: none !important;
+        }
+
+        /* Keyframes for the 'flash' effect on the search bar */
+        @keyframes flash-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .search-bar-flash {
+            animation: flash-red 0.5s ease-in-out 2;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
 </head>
+<body class="bg-gray-50">
 
-<body>
-  <div id="mapOverlay" class="map-overlay"></div>
-  <div id="map"></div>
-
-  <div class="input-wrapper" id="searchContainer">
-    <span class="material-symbols-outlined search-icon">search</span>
-    <input id="locationInput" type="text" placeholder="Enter Your Delivery Location" />
-    <button id="clearInputBtn" class="clear-btn" style="display:none" aria-label="Clear input">
-      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
-        <path
-          d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
-      </svg>
-    </button>
-  </div>
-
-  <button class="set-location-btn" disabled>Share My Location</button>
-  <button id="locateBtn" class="locate-btn">
-    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
-      <path
-        d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Zm0-480Z" />
-    </svg>
-  </button>
-
-  <script src="index.js" defer></script>
-  <!-- HINT under the search bar -->
-  <div id="searchHint" class="search-hint" aria-live="polite">
-    Tip: Start typing your address or tap the target to use GPS.
-  </div>
-
-  <!-- COACHMARK (first visit only) -->
-  <div id="coachmark" class="coachmark" role="dialog" aria-modal="true" aria-label="How to pick your location" hidden>
-    <div class="coach-card">
-      <h3>Step 1 of 2: Choose your location</h3>
-      <p>Type your address here, or tap the target button to use your current location.</p>
-      <button id="coachmarkGotIt" class="coach-cta">Got it</button>
-    </div>
-  </div>
-
-  <!-- STEPPER FOOTER -->
-  <div class="stepper" aria-hidden="false">
-    <div class="step active">
-      <span class="dot"></span>
-      <span>1/2 Choose location</span>
-    </div>
-    <div class="divider"></div>
-    <div class="step" id="step2">
-      <span class="dot"></span>
-      <span>2/2 Send to WhatsApp</span>
-    </div>
-  </div>
-  <!-- Review Sheet -->
-  <div id="reviewSheet" class="sheet hidden" aria-hidden="true">
-    <div class="sheet-backdrop" data-close-sheet></div>
-    <section class="sheet-panel" role="dialog" aria-modal="true" aria-label="Confirm delivery location">
-      <header class="sheet-header">
-        <div class="sheet-handle" aria-hidden="true"></div>
-        <h3>Confirm delivery location</h3>
-      </header>
-
-      <div class="sheet-body">
-        <div class="sheet-row">
-          <span class="sheet-label">Address</span>
-          <div id="sheetAddress" class="sheet-value">—</div>
+    <!-- 1. Map Container -->
+    <div id="map">
+        <!-- Map Placeholder/Loading state -->
+        <div id="mapLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-200 z-0">
+            <svg class="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-4 text-sm text-gray-600 font-medium">Loading Map...</p>
         </div>
-        <!-- <div class="sheet-row">
-          <span class="sheet-label">Coordinates</span>
-          <div id="sheetCoords" class="sheet-value">—</div>
-        </div> -->
-        <button class="sheet-change" type="button" id="sheetChangeBtn">Change</button>
-      </div>
+    </div>
 
-      <footer class="sheet-footer">
-        <button id="sheetConfirmBtn" class="sheet-confirm" type="button">Confirm &amp; Send</button>
-      </footer>
-    </section>
-  </div>
-<div id="netBanner" class="net-banner" aria-live="polite" style="display:none">You’re offline. Some features may be unavailable.</div>
-  <script>
-    // Minimal SW registration (kept here as a fallback; main logic in index.js)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function(){
-        navigator.serviceWorker.register('./sw.js').catch(console.warn);
-      });
+    <!-- 2. Top Bar & Search -->
+    <!-- Added space for the top bar (pt-4) -->
+    <div class="absolute top-0 w-full p-4 z-20 pointer-events-none">
+        <div id="searchContainer" class="pointer-events-auto">
+            <!-- Search Bar: rounded-2xl, h-14, shadow-2xl for better look -->
+            <div id="searchBar" class="flex items-center bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto p-2 h-14 transition-shadow">
+                <i data-lucide="search" class="w-5 h-5 text-gray-400 ml-4"></i>
+                <input id="searchInput" type="text" placeholder="Search for delivery location..."
+                       class="flex-1 px-4 text-base font-medium outline-none bg-transparent"
+                       onfocus="window.app.loadMapsApi();">
+                <button id="clearSearchBtn" class="p-1 rounded-full text-gray-500 hover:bg-gray-100 transition-colors hidden mr-2">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 3. Floating Side Buttons (FABs) -->
+    <!-- Positioned higher and slightly left for better one-hand reach -->
+    <div class="absolute right-4 bottom-28 z-40 flex flex-col space-y-4 pointer-events-none">
+        <!-- Locate Me Button (Circular FAB: w-14 h-14, shadow-2xl) -->
+        <button id="locateMeBtn" onclick="window.app.locateMe()"
+                class="pointer-events-auto w-14 h-14 flex items-center justify-center bg-white hover:bg-gray-100 text-[var(--lipagas-green)] rounded-full shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95">
+            <i data-lucide="locate-fixed" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <!-- 4. Floating Banners (System Alerts) -->
+    <div class="absolute bottom-36 w-full p-4 z-40 pointer-events-none"> 
+        <!-- Offline Banner -->
+        <div id="offlineBanner" class="w-full max-w-md mx-auto p-3 text-center bg-red-600 text-white rounded-xl shadow-xl transition-all duration-500 transform translate-y-12 opacity-0 pointer-events-auto">
+            <p class="text-sm font-semibold flex items-center justify-center">
+                <i data-lucide="x" class="w-4 h-4 mr-2"></i>
+                Offline: Check connection.
+            </p>
+            <p class="text-xs mt-1 font-light">Map and search features require an active internet connection.</p>
+        </div>
+        <!-- Online Banner -->
+        <div id="onlineBanner" class="w-full max-w-md mx-auto p-3 text-center bg-green-500 text-white rounded-xl shadow-xl transition-all duration-500 transform translate-y-12 opacity-0 pointer-events-none mt-2">
+            <p class="text-sm font-semibold flex items-center justify-center">
+                <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                Back Online! All features restored.
+            </p>
+        </div>
+    </div>
+
+    <!-- 5. Floating Confirm Button (Keyboard-aware FAB - Anchored Bar) -->
+    <!-- Bottom 16px (p-4) ensures it's above the very bottom edge -->
+    <div id="fabContainer" class="p-4" style="bottom: 16px;">
+        <button id="confirmLocationFAB" onclick="window.app.showBottomSheet()"
+                class="hidden-fab bg-[var(--lipagas-green)] text-white font-extrabold py-4 px-8 rounded-2xl text-xl shadow-[0_8px_20px_rgba(4,115,70,0.7)] hover:bg-[var(--lipagas-green-light)] transition-all duration-300 active:scale-[0.99]">
+            Select Location
+        </button>
+    </div>
+
+    <!-- 6. Bottom Sheet (Details View) -->
+    <!-- Increased padding (p-8 pt-6) for better spacing -->
+    <div id="bottomSheet" class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-3xl shadow-2xl p-8 pt-6">
+        <!-- Drag Handle (Thicker) -->
+        <div class="flex justify-center mb-6">
+            <div class="w-14 h-1.5 bg-gray-300 rounded-full"></div>
+        </div>
+
+        <h2 class="text-2xl font-extrabold mb-6 text-gray-800 flex items-center">
+            <i data-lucide="map-pin" class="w-6 h-6 text-[var(--lipagas-green)] mr-3"></i>
+            Confirm Delivery Point
+        </h2>
+
+        <div class="space-y-6 mb-8">
+            <!-- Address Box: Elevated and clearly bordered -->
+            <div class="bg-white border-2 border-gray-200 p-5 rounded-xl shadow-sm">
+                <p class="text-sm font-semibold text-gray-500 mb-1.5">Delivery Address</p>
+                <p id="previewAddress" class="text-lg font-bold text-gray-800">Address not selected...</p>
+            </div>
+            <!-- Coordinates Box: Background-colored for secondary info -->
+            <div class="bg-gray-50 p-5 rounded-xl">
+                 <p class="text-sm font-semibold text-gray-500 mb-1.5">GPS Coordinates (Lat, Lng)</p>
+                <p id="previewCoords" class="text-lg font-medium text-gray-600">--</p>
+            </div>
+        </div>
+
+        <div class="flex space-x-4 mt-8 pb-4">
+            <button onclick="window.app.hideBottomSheet()"
+                    class="flex-1 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]">
+                <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+                Review Map
+            </button>
+            <!-- UPDATED: Changed to WhatsApp green color -->
+            <button onclick="window.app.handleConfirmAndSend()"
+                    class="flex-1 flex items-center justify-center bg-[var(--whatsapp-green)] hover:bg-[var(--whatsapp-green-dark)] text-white font-extrabold py-3 rounded-xl transition-colors shadow-lg active:scale-[0.98]">
+                <i data-lucide="check" class="w-5 h-5 mr-2"></i>
+                Send Location
+            </button>
+        </div>
+    </div>
+
+    <!-- 7. Tutorial Overlay -->
+    <div id="tutorialOverlay" class="hidden">
+        
+        <!-- Search Pointer -->
+        <div id="searchPointer" class="text-white">
+             <i data-lucide="arrow-up" class="w-12 h-12 transform rotate-180 mb-2"></i>
+        </div>
+
+        <!-- Main Explainer Card -->
+        <div class="bg-white text-gray-800 p-8 rounded-2xl shadow-2xl max-w-sm mx-auto mt-4 z-101">
+            <h3 class="text-2xl font-extrabold mb-3">Welcome to LipaGas!</h3>
+            <p class="text-lg mb-6 font-medium">
+                To start, **type your delivery location** in the search bar above.
+            </p>
+            <p class="text-sm text-gray-500 mb-8">
+                You can use an address, estate name, or landmark (e.g., "Sarit Centre").
+            </p>
+            <button id="dismissTutorialBtn"
+                    class="w-full bg-[var(--lipagas-green)] text-white font-bold py-3 rounded-xl hover:bg-[var(--lipagas-green-light)] transition-colors active:scale-[0.98]">
+                Got It, Start Sharing!
+            </button>
+        </div>
+    </div>
+
+    <!-- 8. Invisible JSON Data for PWA setup -->
+    <script type="application/json" id="manifest-data">
+    {
+      "name": "LipaGas Location",
+      "short_name": "LipaGas",
+      "description": "Share your delivery location quickly with LipaGas via WhatsApp.",
+      "start_url": "./",
+      "display": "standalone",
+      "background_color": "#ffffff",
+      "theme_color": "#047346",
+      "icons": [
+        {"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzA0NzM0NiIvPjxwYXRoIGQ9M00yNTYgNjRjLTc3LjggMC0xNDAgNjIuMi0xNDAgMTQwYzAgMTQ0IDI1NiAyNTYgMjU2IDI1NnMyNTYtMTEyIDI1Ni0yNTZjMC03Ny44LTYyLjItMTQwLTE0MC0xNDB6bTAtMTgwYzI0LjggMCA0NSAyMC4yIDQ1IDQ1cy0yMC4yIDQ1LTQ1IDQ1LTQ1LTIwLjItNDUtNDVzMjAuMi00NSA0NS00NXoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=", "sizes": "512x512", "type": "image/svg+xml"},
+        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wYh+n/N+O/fP4oDofD8Y5mH8k+t+VLv8tP/f9B/P8+Hn2Yh+n/n/Hfvj8W+w2/f/d9y4cCYvr/3N8NvANe4y4A+I27AOI27AaI27AaImLDtGHbBGl4ytS4Dt6e99diP+K27AaI27AaImLDtGHbBGk47Au9jt3fagf8zN0A8Bt3AMP/d3/6/Ff+N/J0kSgch8NxOBzOv+D5Q5g2D8L6hE+lAAAAAElFTkSuQmCC", "sizes": "192x192", "type": "image/png"}
+      ]
     }
-  </script>
-</body>
+    </script>
 
+    <!-- 9. Main Application Script -->
+    <script>
+        // Use an IIFE or window property to prevent global namespace pollution
+        window.app = (function() {
+            // --- Configuration ---
+            const WA_NUMBER = '254112250250';
+            const MAPS_API_KEY = 'AIzaSyDDRWZ7Ay5MzeFMN6ue-6H-wqWFq6-gd7g';
+            const TUTORIAL_KEY = 'LipaGasTutorialSeen';
+            const DEFAULT_LAT = -1.286389; 
+            const DEFAULT_LNG = 36.817223; 
+
+            // --- State Variables ---
+            let map = null;
+            let marker = null;
+            let autocomplete = null;
+            let selectedLocation = { lat: null, lng: null, address: '' };
+            let mapsApiLoaded = false;
+            let geocoder = null;
+
+            // --- DOM Element References ---
+            const mapEl = document.getElementById('map');
+            const mapLoader = document.getElementById('mapLoader');
+            const searchInput = document.getElementById('searchInput');
+            const searchBarEl = document.getElementById('searchBar'); 
+            const clearSearchBtn = document.getElementById('clearSearchBtn');
+            const confirmLocationFAB = document.getElementById('confirmLocationFAB'); 
+            const fabContainer = document.getElementById('fabContainer'); 
+            const bottomSheet = document.getElementById('bottomSheet');
+            const previewAddressEl = document.getElementById('previewAddress');
+            const previewCoordsEl = document.getElementById('previewCoords');
+            const offlineBanner = document.getElementById('offlineBanner');
+            const onlineBanner = document.getElementById('onlineBanner');
+            const tutorialOverlay = document.getElementById('tutorialOverlay');
+
+            // --- Geocoding Functions ---
+
+            /**
+             * Performs reverse geocoding to get a human-readable address from coordinates.
+             * @param {object} latLng - {lat, lng} coordinates object.
+             */
+            async function geocodePosition(latLng) {
+                if (!geocoder) {
+                    if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                        console.error('Google Maps API not initialized. Cannot geocode.');
+                        return;
+                    }
+                    geocoder = new google.maps.Geocoder();
+                }
+                
+                const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
+                const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
+                
+                if (typeof lat !== 'number' || typeof lng !== 'number') {
+                    console.error('Invalid coordinates provided for geocoding.');
+                    return;
+                }
+
+                try {
+                    // Use only the first result for the address
+                    const response = await geocoder.geocode({ location: {lat, lng} });
+                    if (response.results.length > 0) {
+                        const address = response.results[0].formatted_address;
+                        updateLocation(lat, lng, address);
+                    } else {
+                        updateLocation(lat, lng, 'Unknown address at this location.');
+                    }
+                } catch (e) {
+                        console.error('Geocoder failed due to:', e);
+                        updateLocation(lat, lng, 'Could not determine address.');
+                }
+            }
+
+            // --- UI/State Management ---
+
+            /**
+             * Updates the application's internal state, UI elements, and FAB visibility.
+             */
+            function updateLocation(lat, lng, address) {
+                selectedLocation.lat = lat;
+                selectedLocation.lng = lng;
+                selectedLocation.address = address;
+
+                // Update search input text
+                searchInput.value = address;
+                clearSearchBtn.classList.toggle('hidden', address === '');
+
+                // Control FAB visibility and enable/disable
+                const isLocationSet = !!lat && !!lng;
+                if (isLocationSet) {
+                    confirmLocationFAB.classList.remove('hidden-fab');
+                    confirmLocationFAB.disabled = false;
+                } else {
+                    confirmLocationFAB.classList.add('hidden-fab');
+                    confirmLocationFAB.disabled = true;
+                }
+
+                // Update preview sheet
+                previewAddressEl.textContent = address || 'Tap a location or search to set.';
+                previewCoordsEl.textContent = isLocationSet ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : '--';
+            }
+
+            /**
+             * Updates the map marker position and view.
+             */
+            function updateMarker(latLng, zoom = map.getZoom()) {
+                if (!map || !marker) return;
+
+                marker.setPosition(latLng);
+                map.setCenter(latLng);
+                map.setZoom(zoom);
+
+                geocodePosition(latLng);
+            }
+            
+            // --- Tutorial Logic ---
+            
+            function showTutorial() {
+                const tutorialSeen = localStorage.getItem(TUTORIAL_KEY);
+                if (!tutorialSeen) {
+                    tutorialOverlay.classList.remove('hidden'); 
+                }
+            }
+
+            function hideTutorial() {
+                tutorialOverlay.classList.add('hidden'); 
+                localStorage.setItem(TUTORIAL_KEY, 'true'); // Mark as seen
+            }
+
+            // --- Main Flow Handlers ---
+            
+            function showBottomSheet() {
+                // Check if the location is the default Nairobi center point (simple check)
+                const isDefaultLocation = (
+                    Math.abs(selectedLocation.lat - DEFAULT_LAT) < 0.0001 &&
+                    Math.abs(selectedLocation.lng - DEFAULT_LNG) < 0.0001
+                );
+
+                if (isDefaultLocation) {
+                    // Provide visual feedback that a location must be selected
+                    const originalText = confirmLocationFAB.textContent;
+                    const originalBg = confirmLocationFAB.style.backgroundColor;
+                    const originalShadow = confirmLocationFAB.style.boxShadow;
+
+                    confirmLocationFAB.textContent = "Please Select a Location First";
+                    // Using direct style properties for the flash effect
+                    confirmLocationFAB.style.backgroundColor = '#ef4444'; // Red for error
+                    confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(239, 68, 68, 0.7)';
+
+                    searchBarEl.classList.add('search-bar-flash');
+
+                    setTimeout(() => {
+                        confirmLocationFAB.textContent = originalText;
+                        // Reset to original LipaGas green color
+                        confirmLocationFAB.style.backgroundColor = ''; 
+                        confirmLocationFAB.style.boxShadow = originalShadow;
+                        searchBarEl.classList.remove('search-bar-flash');
+                    }, 1200);
+
+                    return; // Prevent showing the sheet
+                }
+
+                // If location is valid, proceed to show the sheet
+                bottomSheet.classList.add('open');
+                // Hide the FAB and search bar for a clean detail view
+                confirmLocationFAB.classList.add('hidden-fab');
+                document.getElementById('searchContainer').classList.add('opacity-0');
+                // Ensure keyboard is hidden when sheet opens
+                searchInput.blur();
+            }
+
+            function hideBottomSheet() {
+                bottomSheet.classList.remove('open');
+                // Show the FAB and search bar again
+                confirmLocationFAB.classList.remove('hidden-fab');
+                document.getElementById('searchContainer').classList.remove('opacity-0');
+            }
+
+            /**
+             * Formats the message and opens the WhatsApp chat link.
+             * Format: <Place name, address and "lat,lng">
+             */
+            function handleConfirmAndSend() {
+                const { lat, lng, address } = selectedLocation;
+
+                if (!lat || !lng || !address) {
+                    console.error('Location data missing. Cannot send to WhatsApp.');
+                    return;
+                }
+
+                // Format coordinates as "lat,lng" with quotes and 5 decimal places
+                const coordsString = `"${lat.toFixed(5)},${lng.toFixed(5)}"`; 
+
+                // Construct the final message string in the requested format
+                const message = `${address} ${coordsString}`;
+
+                const encodedMessage = encodeURIComponent(message);
+                const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodedMessage}`;
+
+                window.open(waUrl, '_blank');
+            }
+
+            // --- Maps API and Initialization ---
+
+            function loadMapsApi() {
+                if (mapsApiLoaded) return;
+                mapsApiLoaded = true;
+
+                const script = document.createElement('script');
+                script.id = 'maps-script';
+                script.async = true;
+                script.defer = true;
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&callback=window.app.initMap`;
+                document.head.appendChild(script);
+
+                mapLoader.classList.add('hidden');
+            }
+
+            function initMap() {
+                if (typeof google === 'undefined' || typeof google.maps === 'undefined' || !google.maps.Map) {
+                    console.error("FATAL: Google Maps API failed to initialize.");
+                    return;
+                }
+
+                const defaultLatLng = { lat: DEFAULT_LAT, lng: DEFAULT_LNG }; // Nairobi, Kenya
+
+                map = new google.maps.Map(mapEl, {
+                    center: defaultLatLng,
+                    zoom: 13,
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: false,
+                    zoomControl: false,
+                    styles: [
+                        { featureType: 'poi', stylers: [{ visibility: 'off' }] }, 
+                    ]
+                });
+
+                const markerIcon = {
+                    url: 'data:image/svg+xml;utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#047346" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin"><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/><circle cx="12" cy="10" r="3"/></svg>`),
+                    scaledSize: new google.maps.Size(36, 36), // Slightly larger marker
+                    anchor: new google.maps.Point(18, 36),
+                };
+
+                marker = new google.maps.Marker({
+                    map: map,
+                    position: defaultLatLng,
+                    draggable: true,
+                    title: 'Drag me to your location',
+                    icon: markerIcon,
+                });
+
+                // Initialize state with default location
+                updateLocation(defaultLatLng.lat, defaultLatLng.lng, 'Enter location here');
+
+                // Marker Drag Listener
+                marker.addListener('dragend', () => {
+                    updateMarker(marker.getPosition(), map.getZoom());
+                });
+
+                // Map Click Listener
+                map.addListener('click', (e) => {
+                    updateMarker(e.latLng, map.getZoom());
+                });
+
+                // Initialize Places Autocomplete
+                autocomplete = new google.maps.places.Autocomplete(searchInput, {
+                    componentRestrictions: { country: ["ke"] }, 
+                    fields: ["formatted_address", "geometry"],
+                });
+
+                autocomplete.bindTo("bounds", map);
+
+                autocomplete.addListener('place_changed', () => {
+                    const place = autocomplete.getPlace();
+                    if (!place.geometry) {
+                        console.error("Place selection failed: No geometry.");
+                        return;
+                    }
+                    updateMarker(place.geometry.location); 
+                });
+            }
+
+            /**
+             * Uses Geolocation API to find and center the map on the user's current position.
+             */
+            function locateMe() {
+                if (navigator.geolocation) {
+                    confirmLocationFAB.disabled = true;
+                    confirmLocationFAB.textContent = "Locating...";
+                    // Use a subtle color change for loading
+                    confirmLocationFAB.style.backgroundColor = '#3b82f6'; 
+
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
+                            const latLngObject = new google.maps.LatLng(pos.lat, pos.lng);
+                            updateMarker(latLngObject, 17); // Zoom in on GPS
+                            confirmLocationFAB.textContent = "Select Location";
+                            confirmLocationFAB.style.backgroundColor = ''; // Reset BG color
+                        },
+                        (error) => {
+                            console.error('Geolocation failed:', error);
+                            // Simple custom message instead of alert()
+                            console.log("Could not determine your location. Please select manually.");
+                            
+                            confirmLocationFAB.textContent = "Select Location";
+                            confirmLocationFAB.style.backgroundColor = ''; 
+                            confirmLocationFAB.disabled = !selectedLocation.lat;
+                        },
+                        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    );
+                } else {
+                    console.log('Geolocation is not supported by your browser.');
+                }
+            }
+            
+            // --- Notification Handlers (Banners) ---
+
+            function showBanner(element, duration = 0) {
+                element.classList.remove('opacity-0', 'translate-y-12');
+                element.classList.add('opacity-100', 'translate-y-0');
+
+                if (duration > 0) {
+                    setTimeout(() => hideBanner(element), duration);
+                }
+            }
+
+            function hideBanner(element) {
+                element.classList.remove('opacity-100', 'translate-y-0');
+                element.classList.add('opacity-0', 'translate-y-12');
+            }
+
+            function handleOnlineStatus() {
+                const isOnline = navigator.onLine;
+                if (!isOnline) {
+                    showBanner(offlineBanner);
+                    hideBanner(onlineBanner);
+                } else {
+                    hideBanner(offlineBanner);
+                    showBanner(onlineBanner, 3000); 
+                }
+            }
+
+
+            function registerManifest() {
+                const manifestData = document.getElementById('manifest-data').textContent;
+                const manifestBlob = new Blob([manifestData], { type: 'application/json' });
+                const manifestUrl = URL.createObjectURL(manifestBlob);
+
+                const link = document.createElement('link');
+                link.rel = 'manifest';
+                link.href = manifestUrl;
+                document.head.appendChild(link);
+            }
+
+            function setupListeners() {
+                // Primary listeners
+                confirmLocationFAB.addEventListener('click', showBottomSheet);
+                
+                clearSearchBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    clearSearchBtn.classList.add('hidden');
+                });
+                
+                searchInput.addEventListener('input', () => {
+                    clearSearchBtn.classList.toggle('hidden', searchInput.value === '');
+                });
+
+                const dismissTutorialBtn = document.getElementById('dismissTutorialBtn');
+                if (dismissTutorialBtn) {
+                    dismissTutorialBtn.addEventListener('click', hideTutorial);
+                }
+                
+                // --- KEYBOARD AWARENESS LOGIC V2 ---
+                // Lift FAB higher when search input is focused (keyboard opens)
+                searchInput.addEventListener('focusin', () => {
+                    // Lift high enough to clear most mobile keyboards comfortably
+                    fabContainer.style.bottom = '350px'; 
+                });
+                
+                // Lower FAB when search input loses focus (keyboard hides)
+                searchInput.addEventListener('focusout', () => {
+                    // Return the FAB to its original position (16px from bottom edge)
+                    fabContainer.style.bottom = '16px'; 
+                });
+                // --- END KEYBOARD LOGIC ---
+
+                window.addEventListener('online', handleOnlineStatus);
+                window.addEventListener('offline', handleOnlineStatus);
+                handleOnlineStatus(); 
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                registerManifest();
+                setupListeners();
+                
+                // Load the map immediately
+                loadMapsApi();
+
+                // Show the tutorial after everything else is ready
+                showTutorial();
+            });
+
+            // Expose public functions
+            return {
+                loadMapsApi,
+                initMap,
+                locateMe,
+                showBottomSheet,
+                hideBottomSheet,
+                handleConfirmAndSend,
+                hideTutorial
+            };
+        })();
+    </script>
+</body>
 </html>
