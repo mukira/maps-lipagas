@@ -189,10 +189,16 @@ body, html {
   font-size: 12px; color: #4b5563;
 }
 .stepper .step .dot {
-  width: 8px; height: 8px; border-radius: 50%; background: #9ca3af;
+  width: 10px;              /* slightly larger for clarity */
+  aspect-ratio: 1 / 1;      /* enforces perfect circle */
+  border-radius: 50%;
+  background: #9ca3af;
+  flex-shrink: 0;           /* prevents shrinking into oval */
 }
-.stepper .step.active { color: #047346; font-weight: 600; }
-.stepper .step.active .dot { background: #047346; }
+.stepper .step.active .dot {
+  background: #047346;
+}
+
 
 /* --- Coachmark overlay --- */
 .coachmark {
