@@ -279,7 +279,7 @@
     <div class="absolute right-4 bottom-28 z-40 flex flex-col space-y-4 pointer-events-none">
         <button id="locateMeBtn" onclick="window.app.locateMe()"
             class="pointer-events-auto w-14 h-14 flex items-center justify-center bg-white hover:bg-gray-100 text-[var(--lipagas-green)] rounded-full shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95">
-            <i data-lucide="locate-fixed" class="w-6 h-6"></i>
+            <i data-lucide="locate-fixed" class-6 h-6"></i>
         </button>
     </div>
 
@@ -465,11 +465,26 @@
                 }
 
                 try {
-                    // Use only the first result for the address
                     const response = await geocoder.geocode({ location: { lat, lng } });
                     if (response.results.length > 0) {
-                        const address = response.results[0].formatted_address;
-                        updateLocation(lat, lng, address);
+                        let bestAddress = response.results[0].formatted_address;
+
+                        // Iterate to find a more human-readable address (route, neighborhood, establishment, or political)
+                        for (const result of response.results) {
+                            const types = result.types;
+                            if (
+                                types.includes('route') ||
+                                types.includes('neighborhood') ||
+                                types.includes('establishment') ||
+                                types.includes('political')
+                            ) {
+                                // Prefer the first occurrence of a broader, named place
+                                bestAddress = result.formatted_address;
+                                break;
+                            }
+                        }
+
+                        updateLocation(lat, lng, bestAddress);
                     } else {
                         updateLocation(lat, lng, 'Unknown address at this location.');
                     }
@@ -781,7 +796,7 @@
                             let errorMessage;
                             switch (error.code) {
                                 case error.PERMISSION_DENIED:
-                                    errorMessage = "📍 Turn on location in settings, or type your address manually";
+                                    errorMessage = "Enable location, or type the location manually 🚫";
                                     break;
                                 case error.POSITION_UNAVAILABLE:
                                     errorMessage = "Location Unavailable 📶. Try searching instead.";
