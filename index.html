@@ -243,12 +243,42 @@
                 transform: translateY(-5px);
             }
         }
+        
+        /* 7. Pulsing Marker Effect */
+        @keyframes pulse {
+            0% {
+                transform: scale(0.6);
+                opacity: 0.9;
+            }
+            100% {
+                transform: scale(2.5); /* Scale up to be visible around the large pin */
+                opacity: 0;
+            }
+        }
+
+        #markerPulse {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            /* Half the size of the new 128px icon for perfect center alignment */
+            margin-left: -64px; 
+            margin-top: -64px;
+            width: 128px; /* Match the size of the new marker icon */
+            height: 128px;
+            border-radius: 50%;
+            background-color: var(--lipagas-green);
+            z-index: 5; /* Should be under the z-index of the Google Map Marker overlay */
+            opacity: 0;
+            animation: pulse 2s ease-out infinite;
+        }
     </style>
 </head>
 
 <body class="bg-gray-50">
 
     <div id="map">
+        <div id="markerPulse" class="pointer-events-none"></div> 
+
         <div id="mapLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-200 z-0">
             <svg class="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none"
                 viewBox="0 0 24 24">
@@ -693,8 +723,8 @@
 
                 // START MODIFICATION: Use Unicode Location Pin (📍) as the marker icon
                 const emoji = '📍';
-                const size = 64; // Size of the icon container in pixels
-                const fontSize = 48; // Size of the emoji itself
+                const size = 128; // DOUBLED from 64 for a larger pin
+                const fontSize = 96; // DOUBLED from 48 for a larger pin
                 // Create an SVG containing the emoji, centered within the container
                 const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="${fontSize}">${emoji}</text></svg>`;
 
