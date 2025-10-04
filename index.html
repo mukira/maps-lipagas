@@ -440,11 +440,78 @@
             const tutorialOverlay = document.getElementById('tutorialOverlay');
 
             // --- Geocoding Functions ---
+            // --- Address helpers ---
+
+            function getComponent(components, type) {
+                const c = components.find(ac => ac.types.includes(type));
+                return c ? c.long_name : '';
+            }
+
+            function isPlusCodeLike(result) {
+                // Result explicitly typed as plus code OR looks like "ABCD+123, ..."
+                return result.types.includes('plus_code') ||
+                    /^[A-Z0-9+]{4,},/.test(result.formatted_address || '');
+            }
+
+            function choosePreferredResult(results) {
+                // 1) Prefer obvious named places (POIs, businesses, exact addresses, streets)
+                let r = results.find(x =>
+                    !isPlusCodeLike(x) && (
+                        x.types.includes('point_of_interest') ||
+                        x.types.includes('establishment') ||
+                        x.types.includes('premise') ||
+                        x.types.includes('street_address') ||
+                        x.types.includes('route')
+                    )
+                );
+                if (r) return r;
+
+                // 2) Prefer neighborhoods / estates / sublocalities
+                r = results.find(x =>
+                    !isPlusCodeLike(x) && (
+                        x.types.includes('neighborhood') ||
+                        x.types.includes('sublocality') ||
+                        x.types.includes('sublocality_level_1') ||
+                        x.types.includes('political') // many estates carry political+neighborhood
+                    )
+                );
+                if (r) return r;
+
+                // 3) Fall back to anything non-plus-code
+                r = results.find(x => !isPlusCodeLike(x));
+                if (r) return r;
+
+                // 4) Absolute fallback
+                return results[0];
+            }
+
+            function buildNeighborhoodAddress(result) {
+                // Compose: "<neighborhood/estate>, <locality|admin_area>, <country>"
+                const ac = result.address_components || [];
+                const hood = getComponent(ac, 'neighborhood') ||
+                    getComponent(ac, 'sublocality') ||
+                    getComponent(ac, 'sublocality_level_1') ||
+                    '';
+                const locality = getComponent(ac, 'locality') ||
+                    getComponent(ac, 'administrative_area_level_2') ||
+                    getComponent(ac, 'administrative_area_level_1') ||
+                    '';
+                const country = getComponent(ac, 'country') || '';
+
+                // If we got a clean “hood”, build a human-friendly line
+                if (hood) {
+                    return [hood, locality, country].filter(Boolean).join(', ');
+                }
+
+                // Otherwise just use the formatted address
+                return result.formatted_address || '';
+            }
+
 
             /**
-             * Performs reverse geocoding to get a human-readable address from coordinates.
-             * @param {object} latLng - {lat, lng} coordinates object.
-             */
+ * Reverse geocode → prefer named places, then neighborhoods/estates,
+ * then generic formatted address. Avoid Plus Codes.
+ */
             async function geocodePosition(latLng) {
                 if (!geocoder) {
                     if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
@@ -463,14 +530,25 @@
                 }
 
                 try {
-                    // Use only the first result for the address
                     const response = await geocoder.geocode({ location: { lat, lng } });
-                    if (response.results.length > 0) {
-                        const address = response.results[0].formatted_address;
-                        updateLocation(lat, lng, address);
-                    } else {
-                        updateLocation(lat, lng, 'Unknown address at this location.');
+                    if (!response.results || response.results.length === 0) {
+                        updateLocation(lat, lng, 'Unknown location');
+                        return;
                     }
+
+                    const preferred = choosePreferredResult(response.results);
+
+                    // If our preferred result is a neighborhood/estate-type, build a clean string
+                    const isHood =
+                        preferred.types.includes('neighborhood') ||
+                        preferred.types.includes('sublocality') ||
+                        preferred.types.includes('sublocality_level_1');
+
+                    const address = isHood
+                        ? buildNeighborhoodAddress(preferred)
+                        : preferred.formatted_address || buildNeighborhoodAddress(preferred);
+
+                    updateLocation(lat, lng, address);
                 } catch (e) {
                     console.error('Geocoder failed due to:', e);
                     updateLocation(lat, lng, 'Could not determine address.');
