@@ -673,12 +673,20 @@
                     ]
                 });
 
-                // Marker Size Update: Scaled up by 2x (36px -> 72px)
+                // START MODIFICATION: Use Unicode Location Pin (📍) as the marker icon
+                const emoji = '📍';
+                const size = 64; // Size of the icon container in pixels
+                const fontSize = 48; // Size of the emoji itself
+                // Create an SVG containing the emoji, centered within the container
+                const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="${fontSize}">${emoji}</text></svg>`;
+
                 const markerIcon = {
-                    url: 'data:image/svg+xml;utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="#047346" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin"><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/><circle cx="12" cy="10" r="3"/></svg>`),
-                    scaledSize: new google.maps.Size(72, 72), // **Twice the size**
-                    anchor: new google.maps.Point(36, 72), // **Adjusted anchor for centering**
+                    url: 'data:image/svg+xml;utf-8,' + encodeURIComponent(svgContent),
+                    scaledSize: new google.maps.Size(size, size), 
+                    // Anchor at the bottom center of the icon (half size for X, full size for Y)
+                    anchor: new google.maps.Point(size / 2, size), 
                 };
+                // END MODIFICATION
 
                 marker = new google.maps.Marker({
                     map: map,
