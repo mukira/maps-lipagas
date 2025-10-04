@@ -78,17 +78,21 @@
             width: 100%;
         }
 
-        /* 4. FAB Container: Fixed position, keyboard lift, and centered/max-width */
+        /* 4. FAB Container: full width on mobile, centered on large screens */
         #fabContainer {
             position: fixed;
             transition: bottom 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             z-index: 40;
             left: 50%;
             transform: translateX(-50%);
-            width: calc(100% - 2rem);
-            /* p-4 on either side = 2rem */
-            max-width: 32rem;
+            width: 100%;
+            /* full width on phone */
+            padding: 0 1rem;
+            /* same spacing as map edges */
+            max-width: 100%;
+            /* remove restriction */
         }
+
 
         /* 5. Google Maps Autocomplete overrides for clean look and matching width/style */
         .pac-container {
