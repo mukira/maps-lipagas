@@ -562,13 +562,8 @@
             }
 
             /**
-             * Formats the message and opens the WhatsApp chat link.
+             * Formats the message and opens WhatsApp with proper emoji rendering
              */
-            /**
- /**
- * Formats the message and opens WhatsApp with proper emoji rendering
- * (works on Android, iPhone, and Web)
- */
             function handleConfirmAndSend() {
                 const { lat, lng, address } = selectedLocation;
                 if (!lat || !lng || !address) {
@@ -583,23 +578,12 @@
                 const coordsString = `${lat.toFixed(5)},${lng.toFixed(5)}`;
 
                 // WhatsApp-friendly format with one blank line between sections
+                // This string contains the Unicode characters (emojis and newline \n)
                 const message = `${pinEmoji} Delivery Location: ${address}\n\n${mapEmoji} Coordinates: ${coordsString}`;
 
-                /**
-                 * Some browsers (esp. Android WebView/Safari) corrupt emojis
-                 * when encoded directly.  The trick: encode to UTF-8 bytes first,
-                 * then build the URI manually.
-                 */
-                function toUtf8EncodedUrl(str) {
-                    const utf8 = new TextEncoder().encode(str);
-                    let encoded = "";
-                    for (let b of utf8) {
-                        encoded += "%" + b.toString(16).padStart(2, "0");
-                    }
-                    return encoded;
-                }
-
-                const encodedMessage = toUtf8EncodedUrl(message);
+                // FIX: Use the standard browser function `encodeURIComponent()` on the full message string.
+                // This handles the necessary UTF-8 encoding for the URL.
+                const encodedMessage = encodeURIComponent(message);
                 const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodedMessage}`;
                 window.open(waUrl, "_blank");
             }
