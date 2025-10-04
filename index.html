@@ -267,8 +267,7 @@
                 class="flex items-center bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto p-2 h-14 transition-shadow">
                 <i data-lucide="search" class="w-5 h-5 text-gray-400 ml-4"></i>
                 <input id="searchInput" type="text" placeholder="Search for delivery location..."
-                    class="flex-1 px-4 text-base font-medium outline-none bg-transparent"
-                    onfocus="window.app.loadMapsApi();">
+                    class="flex-1 px-4 text-base font-medium outline-none bg-transparent">
                 <button id="clearSearchBtn"
                     class="p-1 rounded-full text-gray-500 hover:bg-gray-100 transition-colors hidden mr-2">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -291,7 +290,7 @@
                 <i data-lucide="x" class="w-4 h-4 mr-2"></i>
                 You’re offline. Please reconnect to continue.
             </p>
-            <p class="text-xs mt-1 font-light">Map and search features require an active internet connection.</p>
+            <p class="text-xs mt-1 font-light">Map and search features require an an active internet connection.</p>
         </div>
         <div id="onlineBanner"
             class="w-full max-w-md mx-auto p-3 text-center bg-green-500 text-white rounded-xl shadow-xl transition-all duration-500 transform translate-y-12 opacity-0 pointer-events-none mt-2">
@@ -659,10 +658,11 @@
                     ]
                 });
 
+                // Marker Size Update: Scaled up by 2x (36px -> 72px)
                 const markerIcon = {
-                    url: 'data:image/svg+xml;utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#047346" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin"><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/><circle cx="12" cy="10" r="3"/></svg>`),
-                    scaledSize: new google.maps.Size(36, 36), // Slightly larger marker
-                    anchor: new google.maps.Point(18, 36),
+                    url: 'data:image/svg+xml;utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="#047346" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin"><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/><circle cx="12" cy="10" r="3"/></svg>`),
+                    scaledSize: new google.maps.Size(72, 72), // **Twice the size**
+                    anchor: new google.maps.Point(36, 72), // **Adjusted anchor for centering**
                 };
 
                 marker = new google.maps.Marker({
@@ -854,10 +854,11 @@
                 registerManifest();
                 setupListeners();
                 
-                // NEW: Load saved location first
+                // Load saved location first
                 loadLastLocation(); 
 
                 // Load the map immediately (initMap will use the loaded location if available)
+                // This ensures the map loads "as fast as possible" when the link opens.
                 loadMapsApi();
 
                 // Show the tutorial after everything else is ready
