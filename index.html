@@ -391,14 +391,16 @@
             // NOTE: Using a placeholder key for demonstration. A real key is required.
             const MAPS_API_KEY = 'AIzaSyDDRWZ7Ay5MzeFMN6ue-6H-wqWFq6-gd7g';
             const TUTORIAL_KEY = 'LipaGasTutorialSeen';
-            const DEFAULT_LAT = -1.286389;
+            const LOCATION_STORAGE_KEY = 'LipaGasLastLocation'; // NEW: Local Storage Key
+            const DEFAULT_LAT = -1.286389; // Nairobi, Kenya
             const DEFAULT_LNG = 36.817223;
 
             // --- State Variables ---
             let map = null;
             let marker = null;
             let autocomplete = null;
-            let selectedLocation = { lat: null, lng: null, address: '' };
+            // Initialize with null, will be populated by loadLastLocation or defaults
+            let selectedLocation = { lat: null, lng: null, address: '' }; 
             let mapsApiLoaded = false;
             let geocoder = null;
 
@@ -417,6 +419,29 @@
             const onlineBanner = document.getElementById('onlineBanner');
             const tutorialOverlay = document.getElementById('tutorialOverlay');
 
+            // --- Local Storage Functions ---
+
+            /**
+             * Loads the last saved location from local storage into selectedLocation.
+             */
+            function loadLastLocation() {
+                const savedLocation = localStorage.getItem(LOCATION_STORAGE_KEY);
+                if (savedLocation) {
+                    try {
+                        const loc = JSON.parse(savedLocation);
+                        // Ensure data integrity before using it
+                        if (loc.lat !== null && loc.lng !== null && loc.address !== '') {
+                            selectedLocation = loc;
+                            // Set the initial search input value
+                            searchInput.value = loc.address;
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse saved location from local storage:', e);
+                        localStorage.removeItem(LOCATION_STORAGE_KEY); // Clear bad data
+                    }
+                }
+            }
+            
             // --- Geocoding Functions ---
 
             /**
@@ -458,12 +483,15 @@
             // --- UI/State Management ---
 
             /**
-             * Updates the application's internal state, UI elements, and FAB visibility.
+             * Updates the application's internal state, UI elements, FAB visibility, AND saves to local storage.
              */
             function updateLocation(lat, lng, address) {
                 selectedLocation.lat = lat;
                 selectedLocation.lng = lng;
                 selectedLocation.address = address;
+
+                // Save current location to local storage for persistence
+                localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(selectedLocation));
 
                 // Update search input text
                 searchInput.value = address;
@@ -518,7 +546,8 @@
                 // Check if the location is the default Nairobi center point (simple check)
                 const isDefaultLocation = (
                     Math.abs(selectedLocation.lat - DEFAULT_LAT) < 0.0001 &&
-                    Math.abs(selectedLocation.lng - DEFAULT_LNG) < 0.0001
+                    Math.abs(selectedLocation.lng - DEFAULT_LNG) < 0.0001 &&
+                    selectedLocation.address === ''
                 );
 
                 if (isDefaultLocation) {
@@ -562,7 +591,7 @@
             }
 
             /**
-             * Formats the message and opens WhatsApp with proper emoji rendering
+             * Formats the message using WhatsApp Markdown and opens WhatsApp.
              */
             function handleConfirmAndSend() {
                 const { lat, lng, address } = selectedLocation;
@@ -575,14 +604,13 @@
                 const pinEmoji = "📍";
                 const mapEmoji = "🗺️";
 
+                // Coordinate format without spacing
                 const coordsString = `${lat.toFixed(5)},${lng.toFixed(5)}`;
 
-                // FIX: Use WhatsApp Markdown (* for bold*) and a single newline (\n) for compactness.
-                // The resulting message will look like: 📍 *Delivery Location:* Address\n🗺️ *Coordinates:* -1.23,36.88
+                // Use WhatsApp Markdown (* for bold*) and a single newline (\n) for compactness.
                 const message = `${pinEmoji} *Delivery Location:* ${address}\n${mapEmoji} *Coordinates:* ${coordsString}`;
 
                 // Use the standard browser function `encodeURIComponent()` on the full message string.
-                // This handles the necessary UTF-8 encoding for the URL.
                 const encodedMessage = encodeURIComponent(message);
                 const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodedMessage}`;
                 window.open(waUrl, "_blank");
@@ -613,11 +641,15 @@
                     return;
                 }
 
-                const defaultLatLng = { lat: DEFAULT_LAT, lng: DEFAULT_LNG }; // Nairobi, Kenya
+                // Use saved location or default
+                const initialLat = selectedLocation.lat || DEFAULT_LAT;
+                const initialLng = selectedLocation.lng || DEFAULT_LNG;
+                const initialLatLng = { lat: initialLat, lng: initialLng };
+                const initialZoom = selectedLocation.lat ? 16 : 13; // Zoom in if location was saved
 
                 map = new google.maps.Map(mapEl, {
-                    center: defaultLatLng,
-                    zoom: 13,
+                    center: initialLatLng,
+                    zoom: initialZoom,
                     mapTypeControl: false,
                     streetViewControl: false,
                     fullscreenControl: false,
@@ -635,14 +667,19 @@
 
                 marker = new google.maps.Marker({
                     map: map,
-                    position: defaultLatLng,
+                    position: initialLatLng,
                     draggable: true,
                     title: 'Drag me to your location',
                     icon: markerIcon,
                 });
 
-                // Initialize state with default location
-                updateLocation(defaultLatLng.lat, defaultLatLng.lng, '');
+                // Manually ensure UI is consistent if location was loaded from storage
+                if (selectedLocation.lat) {
+                    updateLocation(initialLat, initialLng, selectedLocation.address);
+                } else {
+                    // Initialize state with default location if nothing saved
+                    updateLocation(initialLat, initialLng, '');
+                }
 
                 // Marker Drag Listener
                 marker.addListener('dragend', () => {
@@ -816,8 +853,11 @@
             document.addEventListener('DOMContentLoaded', () => {
                 registerManifest();
                 setupListeners();
+                
+                // NEW: Load saved location first
+                loadLastLocation(); 
 
-                // Load the map immediately
+                // Load the map immediately (initMap will use the loaded location if available)
                 loadMapsApi();
 
                 // Show the tutorial after everything else is ready
