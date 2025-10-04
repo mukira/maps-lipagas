@@ -378,7 +378,7 @@
       "theme_color": "#047346",
       "icons": [
         {"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzA0NzM0NiIvPjxwYXRoIGQ9M00yNTYgNjRjLTc3LjggMC0xNDAgNjIuMi0xNDAgMTQwYzAgMTQ0IDI1NiAyNTYgMjU2IDI1NnMyNTYtMTEyIDI1Ni0yNTZjMC03Ny44LTYyLjItMTQwLTE0MC0xNDB6bTAtMTgwYzI0LjggMCA0NSAyMC4yIDQ1IDQ1cy0yMC4yIDQ1LTQ1IDQ1LTQ1LTIwLjItNDUtNDVzMjAuMi00NSA0NS00NXoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=", "sizes": "512x512", "type": "image/svg+xml"},
-        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wYh+n/N+O/fP4oDofD8Y5mH8k+t+VLv8tP/f9B/P8+Hn2Yh+n/n/Hfvj8W+w2/f/d9y4cCYvr/3N8NvANe4y4A+I27AOI27AaI27AaImLDtGHbBGk4ytS4Dt6e99diP+K27AaI27AaImLDtGHbBGk47Au9jt3fagf8zN0A8Bt3AMP/d3/6/Ff+N/J0kSgch8NxOBzOv+D5Q5g2D8L6hE+lAAAAAElFTkSuQmCC", "sizes": "192x192", "type": "image/png"}
+        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wBYhy+/3j2b+n/3xcHw+FwOBzOYeQvYJg8DPUJfCoAAAAASUVORK5CYII=", "sizes": "192x192", "type": "image/png"}
       ]
     }
     </script>
@@ -577,11 +577,11 @@
 
                 const coordsString = `${lat.toFixed(5)},${lng.toFixed(5)}`;
 
-                // WhatsApp-friendly format with one blank line between sections
-                // This string contains the Unicode characters (emojis and newline \n)
-                const message = `${pinEmoji} Delivery Location: ${address}\n\n${mapEmoji} Coordinates: ${coordsString}`;
+                // FIX: Use WhatsApp Markdown (* for bold*) and a single newline (\n) for compactness.
+                // The resulting message will look like: 📍 *Delivery Location:* Address\n🗺️ *Coordinates:* -1.23,36.88
+                const message = `${pinEmoji} *Delivery Location:* ${address}\n${mapEmoji} *Coordinates:* ${coordsString}`;
 
-                // FIX: Use the standard browser function `encodeURIComponent()` on the full message string.
+                // Use the standard browser function `encodeURIComponent()` on the full message string.
                 // This handles the necessary UTF-8 encoding for the URL.
                 const encodedMessage = encodeURIComponent(message);
                 const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodedMessage}`;
