@@ -5,17 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LipaGas Location Sharer</title>
-    <!-- Tailwind CSS CDN for modern, mobile-first styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- User-provided Material Symbols link for variable font axes -->
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=location_on" />
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
-    <!-- Lucide Icons for clean UI elements -->
     <script type="module">
         import { createIcons, MapPin, Search, LocateFixed, X, Check, ArrowLeft, ArrowUp } from 'https://unpkg.com/lucide@latest/dist/esm/lucide.js';
         createIcons({ icons: { MapPin, Search, LocateFixed, X, Check, ArrowLeft, ArrowUp } });
@@ -252,9 +248,7 @@
 
 <body class="bg-gray-50">
 
-    <!-- 1. Map Container -->
     <div id="map">
-        <!-- Map Placeholder/Loading state -->
         <div id="mapLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-200 z-0">
             <svg class="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none"
                 viewBox="0 0 24 24">
@@ -267,11 +261,8 @@
         </div>
     </div>
 
-    <!-- 2. Top Bar & Search -->
-    <!-- Added space for the top bar (pt-4) -->
     <div class="absolute top-0 w-full p-4 z-20 pointer-events-none">
         <div id="searchContainer" class="pointer-events-auto">
-            <!-- Search Bar: rounded-2xl, h-14, shadow-2xl for better look -->
             <div id="searchBar"
                 class="flex items-center bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto p-2 h-14 transition-shadow">
                 <i data-lucide="search" class="w-5 h-5 text-gray-400 ml-4"></i>
@@ -286,19 +277,14 @@
         </div>
     </div>
 
-    <!-- 3. Floating Side Buttons (FABs) -->
-    <!-- Positioned higher and slightly left for better one-hand reach -->
     <div class="absolute right-4 bottom-28 z-40 flex flex-col space-y-4 pointer-events-none">
-        <!-- Locate Me Button (Circular FAB: w-14 h-14, shadow-2xl) -->
         <button id="locateMeBtn" onclick="window.app.locateMe()"
             class="pointer-events-auto w-14 h-14 flex items-center justify-center bg-white hover:bg-gray-100 text-[var(--lipagas-green)] rounded-full shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95">
             <i data-lucide="locate-fixed" class="w-6 h-6"></i>
         </button>
     </div>
 
-    <!-- 4. Floating Banners (System Alerts) -->
     <div class="absolute bottom-36 w-full p-4 z-40 pointer-events-none">
-        <!-- Offline Banner -->
         <div id="offlineBanner"
             class="w-full max-w-md mx-auto p-3 text-center bg-red-600 text-white rounded-xl shadow-xl transition-all duration-500 transform translate-y-12 opacity-0 pointer-events-auto">
             <p class="text-sm font-semibold flex items-center justify-center">
@@ -307,7 +293,6 @@
             </p>
             <p class="text-xs mt-1 font-light">Map and search features require an active internet connection.</p>
         </div>
-        <!-- Online Banner -->
         <div id="onlineBanner"
             class="w-full max-w-md mx-auto p-3 text-center bg-green-500 text-white rounded-xl shadow-xl transition-all duration-500 transform translate-y-12 opacity-0 pointer-events-none mt-2">
             <p class="text-sm font-semibold flex items-center justify-center">
@@ -317,8 +302,6 @@
         </div>
     </div>
 
-    <!-- 5. Floating Confirm Button (Keyboard-aware FAB - Anchored Bar) -->
-    <!-- Bottom 16px (p-4) ensures it's above the very bottom edge -->
     <div id="fabContainer" class="p-4" style="bottom: 16px;">
         <button id="confirmLocationFAB" onclick="window.app.showBottomSheet()"
             class="hidden-fab w-full max-w-lg mx-auto block bg-[var(--lipagas-green)] text-white font-extrabold py-4 rounded-2xl text-xl shadow-[0_8px_20px_rgba(4,115,70,0.7)] hover:bg-[var(--lipagas-green-light)] transition-all duration-300 active:scale-[0.99]">
@@ -327,11 +310,8 @@
     </div>
 
 
-    <!-- 6. Bottom Sheet (Details View) -->
-    <!-- Increased padding (p-8 pt-6) for better spacing -->
     <div id="bottomSheet"
         class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-3xl shadow-2xl p-8 pt-6">
-        <!-- Drag Handle (Thicker) -->
         <div class="flex justify-center mb-6">
             <div class="w-14 h-1.5 bg-gray-300 rounded-full"></div>
         </div>
@@ -342,12 +322,10 @@
         </h2>
 
         <div class="space-y-6 mb-8">
-            <!-- Address Box: Elevated and clearly bordered -->
             <div class="bg-white border-2 border-gray-200 p-5 rounded-xl shadow-sm">
                 <p class="text-sm font-semibold text-gray-500 mb-1.5">Delivery Address</p>
                 <p id="previewAddress" class="text-lg font-bold text-gray-800">Address not selected...</p>
             </div>
-            <!-- Coordinates Box: Background-colored for secondary info -->
             <div class="bg-gray-50 p-5 rounded-xl">
                 <p class="text-sm font-semibold text-gray-500 mb-1.5">GPS Coordinates (Lat, Lng)</p>
                 <p id="previewCoords" class="text-lg font-medium text-gray-600">--</p>
@@ -360,7 +338,6 @@
                 <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
                 Review Map
             </button>
-            <!-- UPDATED: Changed to WhatsApp green color -->
             <button onclick="window.app.handleConfirmAndSend()"
                 class="flex-1 flex items-center justify-center bg-[var(--whatsapp-green)] hover:bg-[var(--whatsapp-green-dark)] text-white font-extrabold py-3 rounded-xl transition-colors shadow-lg active:scale-[0.98]">
                 <i data-lucide="check" class="w-5 h-5 mr-2"></i>
@@ -369,15 +346,12 @@
         </div>
     </div>
 
-    <!-- 7. Tutorial Overlay -->
     <div id="tutorialOverlay" class="hidden">
 
-        <!-- Search Pointer -->
         <div id="searchPointer" class="text-white">
             <i data-lucide="arrow-up" class="w-12 h-12 transform rotate-180 mb-2"></i>
         </div>
 
-        <!-- Main Explainer Card -->
         <div class="bg-white text-gray-800 p-8 rounded-2xl shadow-2xl max-w-sm mx-auto mt-4 z-101">
             <h3 class="text-2xl font-extrabold mb-3">Share Location!</h3>
             <p class="text-lg mb-6 font-medium">
@@ -393,7 +367,6 @@
         </div>
     </div>
 
-    <!-- 8. Invisible JSON Data for PWA setup -->
     <script type="application/json" id="manifest-data">
     {
       "name": "LipaGas Location",
@@ -405,17 +378,17 @@
       "theme_color": "#047346",
       "icons": [
         {"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzA0NzM0NiIvPjxwYXRoIGQ9M00yNTYgNjRjLTc3LjggMC0xNDAgNjIuMi0xNDAgMTQwYzAgMTQ0IDI1NiAyNTYgMjU2IDI1NnMyNTYtMTEyIDI1Ni0yNTZjMC03Ny44LTYyLjItMTQwLTE0MC0xNDB6bTAtMTgwYzI0LjggMCA0NSAyMC4yIDQ1IDQ1cy0yMC4yIDQ1LTQ1IDQ1LTQ1LTIwLjItNDUtNDVzMjAuMi00NSA0NS00NXoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=", "sizes": "512x512", "type": "image/svg+xml"},
-        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wYh+n/N+O/fP4oDofD8Y5mH8k+t+VLv8tP/f9B/P8+Hn2Yh+n/n/Hfvj8W+w2/f/d9y4cCYvr/3N8NvANe4y4A+I27AOI27AaI27AaImLDtGHbBGl4ytS4Dt6e99diP+K27AaI27AaImLDtGHbBGk47Au9jt3fagf8zN0A8Bt3AMP/d3/6/Ff+N/J0kSgch8NxOBzOv+D5Q5g2D8L6hE+lAAAAAElFTkSuQmCC", "sizes": "192x192", "type": "image/png"}
+        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wYh+n/N+O/fP4oDofD8Y5mH8k+t+VLv8tP/f9B/P8+Hn2Yh+n/n/Hfvj8W+w2/f/d9y4cCYvr/3N8NvANe4y4A+I27AOI27AaI27AaImLDtGHbBGk4ytS4Dt6e99diP+K27AaI27AaImLDtGHbBGk47Au9jt3fagf8zN0A8Bt3AMP/d3/6/Ff+N/J0kSgch8NxOBzOv+D5Q5g2D8L6hE+lAAAAAElFTkSuQmCC", "sizes": "192x192", "type": "image/png"}
       ]
     }
     </script>
 
-    <!-- 9. Main Application Script -->
     <script>
         // Use an IIFE or window property to prevent global namespace pollution
         window.app = (function () {
             // --- Configuration ---
             const WA_NUMBER = '254112250250';
+            // NOTE: Using a placeholder key for demonstration. A real key is required.
             const MAPS_API_KEY = 'AIzaSyDDRWZ7Ay5MzeFMN6ue-6H-wqWFq6-gd7g';
             const TUTORIAL_KEY = 'LipaGasTutorialSeen';
             const DEFAULT_LAT = -1.286389;
@@ -521,6 +494,7 @@
                 map.setCenter(latLng);
                 map.setZoom(zoom);
 
+                // This triggers reverse geocoding to get the address from the new marker position
                 geocodePosition(latLng);
             }
 
@@ -588,30 +562,49 @@
             }
 
             /**
- * Formats the message and opens the WhatsApp chat link.
- * Format example:
- * 📍 Delivery Location: Sarit Centre, Nairobi
- * 🗺️ Coordinates: -1.28639,36.81722
+             * Formats the message and opens the WhatsApp chat link.
+             */
+            /**
+ /**
+ * Formats the message and opens WhatsApp with proper emoji rendering
+ * (works on Android, iPhone, and Web)
  */
             function handleConfirmAndSend() {
                 const { lat, lng, address } = selectedLocation;
-
                 if (!lat || !lng || !address) {
                     console.error('Location data missing. Cannot send to WhatsApp.');
                     return;
                 }
 
-                // Create coordinate string without quotes
+                // True Unicode emojis
+                const pinEmoji = "📍";
+                const mapEmoji = "🗺️";
+
                 const coordsString = `${lat.toFixed(5)},${lng.toFixed(5)}`;
 
-                // Build a neat WhatsApp message
-                const message = `📍 Delivery Location: ${address}\n🗺️ Coordinates: ${coordsString}`;
+                // WhatsApp-friendly format with one blank line between sections
+                const message = `${pinEmoji} Delivery Location: ${address}\n\n${mapEmoji} Coordinates: ${coordsString}`;
 
-                // Encode and send
-                const encodedMessage = encodeURIComponent(message);
+                /**
+                 * Some browsers (esp. Android WebView/Safari) corrupt emojis
+                 * when encoded directly.  The trick: encode to UTF-8 bytes first,
+                 * then build the URI manually.
+                 */
+                function toUtf8EncodedUrl(str) {
+                    const utf8 = new TextEncoder().encode(str);
+                    let encoded = "";
+                    for (let b of utf8) {
+                        encoded += "%" + b.toString(16).padStart(2, "0");
+                    }
+                    return encoded;
+                }
+
+                const encodedMessage = toUtf8EncodedUrl(message);
                 const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodedMessage}`;
-                window.open(waUrl, '_blank');
+                window.open(waUrl, "_blank");
             }
+
+
 
 
             // --- Maps API and Initialization ---
@@ -680,7 +673,8 @@
                 // Initialize Places Autocomplete
                 autocomplete = new google.maps.places.Autocomplete(searchInput, {
                     componentRestrictions: { country: ["ke"] },
-                    fields: ["formatted_address", "geometry"],
+                    // IMPORTANT: Include 'name' to get the human-readable place name
+                    fields: ["formatted_address", "geometry", "name"],
                 });
 
                 autocomplete.bindTo("bounds", map);
@@ -691,7 +685,37 @@
                         console.error("Place selection failed: No geometry.");
                         return;
                     }
-                    updateMarker(place.geometry.location);
+
+                    const lat = place.geometry.location.lat();
+                    const lng = place.geometry.location.lng();
+                    let displayAddress = '';
+
+                    // FIX: Prioritize the selected place's name over the default formatted address (Plus Code)
+                    const name = place.name;
+                    const formattedAddress = place.formatted_address;
+
+                    if (name && name !== formattedAddress) {
+                        // Use the human-readable name if it's distinct
+                        displayAddress = name;
+                    } else if (formattedAddress) {
+                        // Fallback to the formatted address (e.g., for street addresses)
+                        displayAddress = formattedAddress;
+                    } else {
+                        // Final fallback
+                        displayAddress = "Selected location";
+                    }
+
+                    // Move marker, center map, and update state with the preferred address
+                    if (marker) {
+                        marker.setPosition(place.geometry.location);
+                        map.setCenter(place.geometry.location);
+                        map.setZoom(17);
+                    }
+
+                    // Update app state and UI, setting the search input value to displayAddress
+                    updateLocation(lat, lng, displayAddress);
+
+                    // Note: We skip geocodePosition() here because Autocomplete already gives us the best address/name.
                 });
             }
 
