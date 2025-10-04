@@ -377,7 +377,7 @@
       "theme_color": "#047346",
       "icons": [
         {"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzA0NzM0NiIvPjxwYXRoIGQ9M00yNTYgNjRjLTc3LjggMC0xNDAgNjIuMi0xNDAgMTQwYzAgMTQ0IDI1NiAyNTYgMjU2IDI1NnMyNTYtMTEyIDI1Ni0yNTZjMC03Ny44LTYyLjItMTQwLTE0MC0xNDB6bTAtMTgwYzI0LjggMCA0NSAyMC4yIDQ1IDQ1cy0yMC4yIDQ1LTQ1IDQ1LTQ1LTIwLjItNDUtNDVzMjAuMi00NSA0NS00NXoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=", "sizes": "512x512", "type": "image/svg+xml"},
-        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wBYhy+/3j2b+n/3xcHw+FwOBzOYeQvYJg8DPUJfCoAAAAASUVORK5CYII=", "sizes": "192x192", "type": "image/png"}
+        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wBYhy+/3j2b+n/3xcHw+FwOBzOYeQvYJg8DPUJfCoAAAAASUVORK5CYII=", "sizes": "192x192", "type": "image/png"}
       ]
     }
     </script>
@@ -742,35 +742,79 @@
 
             /**
              * Uses Geolocation API to find and center the map on the user's current position.
+             * * UX IMPROVEMENT: Provides clear loading, success, and specific error states 
+             * on the FAB (Confirm Location button).
              */
             function locateMe() {
+                const originalText = confirmLocationFAB.textContent;
+
                 if (navigator.geolocation) {
+                    // 1. Initial Loading State
                     confirmLocationFAB.disabled = true;
                     confirmLocationFAB.textContent = "Locating...";
-                    // Use a subtle color change for loading
-                    confirmLocationFAB.style.backgroundColor = '#3b82f6';
+                    confirmLocationFAB.style.backgroundColor = '#3b82f6'; // Blue for loading (direct style)
+                    confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.7)'; // Blue shadow
+
+                    const resetFAB = (addressFound) => {
+                        confirmLocationFAB.textContent = originalText;
+                        confirmLocationFAB.style.backgroundColor = ''; // Reset to CSS default (lipagas-green)
+                        confirmLocationFAB.style.boxShadow = ''; // Reset to CSS default
+                        confirmLocationFAB.disabled = !addressFound;
+                    };
 
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
+                            // SUCCESS
                             const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
                             const latLngObject = new google.maps.LatLng(pos.lat, pos.lng);
-                            updateMarker(latLngObject, 17); // Zoom in on GPS
-                            confirmLocationFAB.textContent = "Select Location";
-                            confirmLocationFAB.style.backgroundColor = ''; // Reset BG color
+                            updateMarker(latLngObject, 17); // This updates selectedLocation and enables the FAB
+
+                            // Temporary success feedback
+                            confirmLocationFAB.textContent = "Location Found! ✅";
+                            confirmLocationFAB.style.backgroundColor = '#10b981'; // Green for success
+                            confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(16, 185, 129, 0.7)'; // Green shadow
+
+                            setTimeout(() => resetFAB(true), 1500);
                         },
                         (error) => {
-                            console.error('Geolocation failed:', error);
-                            // Simple custom message instead of alert()
-                            console.log("Could not determine your location. Please select manually.");
+                            // ERROR HANDLING: Better UX feedback
+                            let errorMessage;
+                            switch (error.code) {
+                                case error.PERMISSION_DENIED:
+                                    errorMessage = "Permission Denied 🚫. Enable location in settings.";
+                                    break;
+                                case error.POSITION_UNAVAILABLE:
+                                    errorMessage = "Location Unavailable 📶. Try searching instead.";
+                                    break;
+                                case error.TIMEOUT:
+                                    errorMessage = "Location timed out ⏳. Try again.";
+                                    break;
+                                default:
+                                    errorMessage = "Location Error ❌. Please select manually.";
+                                    break;
+                            }
 
-                            confirmLocationFAB.textContent = "Select Location";
-                            confirmLocationFAB.style.backgroundColor = '';
-                            confirmLocationFAB.disabled = !selectedLocation.lat;
+                            console.error('Geolocation failed:', error.message);
+
+                            // Temporary error feedback
+                            confirmLocationFAB.textContent = errorMessage;
+                            confirmLocationFAB.style.backgroundColor = '#ef4444'; // Red for error
+                            confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(239, 68, 68, 0.7)'; // Red shadow
+
+                            setTimeout(() => {
+                                // Reset based on whether a location was previously set
+                                resetFAB(!!selectedLocation.lat);
+                            }, 3000); // 3s display for error
                         },
-                        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                        { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 } 
                     );
                 } else {
+                    // Browser doesn't support Geolocation
                     console.log('Geolocation is not supported by your browser.');
+                    // Display persistent error on FAB
+                    confirmLocationFAB.textContent = "Browser Error: Geolocation not supported.";
+                    confirmLocationFAB.style.backgroundColor = '#ef4444';
+                    confirmLocationFAB.disabled = true;
                 }
             }
 
