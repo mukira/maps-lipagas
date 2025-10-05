@@ -307,7 +307,7 @@
         </div>
     </div>
 
-    <div class="fixed right-4 bottom-28 z-40 flex flex-col space-y-4 pointer-events-none">
+    <div class="absolute right-4 bottom-28 z-40 flex flex-col space-y-4 pointer-events-none">
         <button id="locateMeBtn" onclick="window.app.locateMe()"
             class="pointer-events-auto w-14 h-14 flex items-center justify-center bg-white hover:bg-gray-100 text-[var(--lipagas-green)] rounded-full shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95">
             <i data-lucide="locate-fixed" class="w-6 h-6"></i>
@@ -408,7 +408,7 @@
       "theme_color": "#047346",
       "icons": [
         {"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzA0NzM0NiIvPjxwYXRoIGQ9M00yNTYgNjRjLTc3LjggMC0xNDAgNjIuMi0xNDAgMTQwYzAgMTQ0IDI1NiAyNTYgMjU2IDI1NnMyNTYtMTEyIDI1Ni0yNTZjMC03Ny44LTYyLjItMTQwLTE0MC0xNDB6bTAtMTgwYzI0LjggMCA0NSAyMC4yIDQ1IDQ1cy0yMC4yIDQ1LTQ1IDQ1LTQ1LTIwLjItNDUtNDVzMjAuMi00NSA0NS00NXoiIGZpbGw9IiNmZmYiLz48L2VzZ3Y+"), "sizes": "512x512", "type": "image/svg+xml"},
-        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wBYhy+/3b9n/3xcHw+FwOBzOYeQvYJg8DPUJfCoAAAAASUVORK5CYII=", "sizes": "192x192", "type": "image/png"}
+        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wBYhy+/3j2b+n/3xcHw+FwOBzOYeQvYJg8DPUJfCoAAAAASUVORK5CYII=", "sizes": "192x192", "type": "image/png"}
       ]
     }
     </script>
@@ -543,16 +543,13 @@
                 clearSearchBtn.classList.toggle('hidden', address === '');
 
                 // Control FAB visibility and enable/disable
-                const isLocationSet = !!lat && !!lng && address !== '';
+                const isLocationSet = !!lat && !!lng;
                 if (isLocationSet) {
                     confirmLocationFAB.classList.remove('hidden-fab');
                     confirmLocationFAB.disabled = false;
                 } else {
-                    // Only hide if the map has actually loaded and a location hasn't been set
-                    if (map) { 
-                        confirmLocationFAB.classList.add('hidden-fab');
-                        confirmLocationFAB.disabled = true;
-                    }
+                    confirmLocationFAB.classList.add('hidden-fab');
+                    confirmLocationFAB.disabled = true;
                 }
 
                 // Update preview sheet
@@ -671,17 +668,8 @@
 
             function loadMapsApi() {
                 if (mapsApiLoaded) return;
-
-                // CRITICAL FIX: Check if the key is the default placeholder, and warn the user.
-                if (MAPS_API_KEY === 'AIzaSyDDRWZ7Ay5MzeFMN6ue-6H-wqWFq6-gd7g' || !MAPS_API_KEY) {
-                    console.error("FATAL ERROR: The Google Maps API Key is missing or using the placeholder. Please replace 'AIzaSyDDRWZ7Ay5MzeFMN6ue-6H-wqWFq6-gd7g' with a valid API key to load the map.");
-                    mapLoader.querySelector('p').textContent = "ERROR: Maps API Key is missing. Check console for details.";
-                    mapLoader.classList.add('bg-red-200', 'text-red-700');
-                    mapLoader.querySelector('svg').style.display = 'none'; // Hide spinner
-                    return;
-                }
-
                 mapsApiLoaded = true;
+
                 const script = document.createElement('script');
                 script.id = 'maps-script';
                 script.async = true;
@@ -689,21 +677,14 @@
                 script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&callback=window.app.initMap`;
                 document.head.appendChild(script);
 
-                // We keep the loader visible until initMap is called successfully.
+                mapLoader.classList.add('hidden');
             }
 
             function initMap() {
                 if (typeof google === 'undefined' || typeof google.maps === 'undefined' || !google.maps.Map) {
                     console.error("FATAL: Google Maps API failed to initialize.");
-                    // Ensure the loader remains visible with an error message if the callback fails.
-                    mapLoader.querySelector('p').textContent = "ERROR: Map failed to load. Check API Key or console.";
-                    mapLoader.classList.remove('text-gray-600').classList.add('text-red-700');
-                    mapLoader.querySelector('svg').style.display = 'none';
                     return;
                 }
-                
-                // HIDE LOADER ONLY AFTER MAP OBJECT IS CREATED
-                mapLoader.classList.add('hidden');
 
                 // Use saved location or default
                 const initialLat = selectedLocation.lat || DEFAULT_LAT;
