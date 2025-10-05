@@ -251,7 +251,7 @@
                 opacity: 0.9;
             }
             100% {
-                transform: scale(2.5); /* Scale up to be visible around the large pin */
+                transform: scale(2.5); 
                 opacity: 0;
             }
         }
@@ -260,16 +260,17 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            /* Half the size of the new 128px icon for perfect center alignment */
-            margin-left: -64px; 
-            margin-top: -64px;
-            width: 128px; /* Match the size of the new marker icon */
-            height: 128px;
+            /* Half the size of the new 88px icon for perfect center alignment */
+            margin-left: -44px; 
+            margin-top: -44px;
+            width: 88px; /* Match the size of the new marker icon */
+            height: 88px;
             border-radius: 50%;
             background-color: var(--lipagas-green);
             z-index: 5; /* Should be under the z-index of the Google Map Marker overlay */
             opacity: 0;
-            animation: pulse 2s ease-out infinite;
+            /* Ensure the pulse continues always */
+            animation: pulse 2s ease-out infinite; 
         }
     </style>
 </head>
@@ -406,7 +407,7 @@
       "background_color": "#ffffff",
       "theme_color": "#047346",
       "icons": [
-        {"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzA0NzM0NiIvPjxwYXRoIGQ9M00yNTYgNjRjLTc3LjggMC0xNDAgNjIuMi0xNDAgMTQwYzAgMTQ0IDI1NiAyNTYgMjU2IDI1NnMyNTYtMTEyIDI1Ni0yNTZjMC03Ny44LTYyLjItMTQwLTE0MC0xNDB6bTAtMTgwYzI0LjggMCA0NSAyMC4yIDQ1IDQ1cy0yMC4yIDQ1LTQ1IDQ1LTQ1LTIwLjItNDUtNDVzMjAuMi00NSA0NS00NXoiIGZpbGw9IiNmZmYiLz48L2Vzdmc+"), "sizes": "512x512", "type": "image/svg+xml"},
+        {"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzA0NzM0NiIvPjxwYXRoIGQ9M00yNTYgNjRjLTc3LjggMC0xNDAgNjIuMi0xNDAgMTQwYzAgMTQ0IDI1NiAyNTYgMjU2IDI1NnMyNTYtMTEyIDI1Ni0yNTZjMC03Ny44LTYyLjItMTQwLTE0MC0xNDB6bTAtMTgwYzI0LjggMCA0NSAyMC4yIDQ1IDQ1cy0yMC4yIDQ1LTQ1IDQ1LTQ1LTIwLjItNDUtNDVzMjAuMi00NSA0NS00NXoiIGZpbGw9IiNmZmYiLz48L2VzZ3Y+"), "sizes": "512x512", "type": "image/svg+xml"},
         {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wBYhy+/3j2b+n/3xcHw+FwOBzOYeQvYJg8DPUJfCoAAAAASUVORK5CYII=", "sizes": "192x192", "type": "image/png"}
       ]
     }
@@ -723,8 +724,8 @@
 
                 // START MODIFICATION: Use Unicode Location Pin (📍) as the marker icon
                 const emoji = '📍';
-                const size = 128; // DOUBLED from 64 for a larger pin
-                const fontSize = 96; // DOUBLED from 48 for a larger pin
+                const size = 88; // CHANGED to 88px as requested
+                const fontSize = 66; // Adjusted to maintain pin visibility within 88px container
                 // Create an SVG containing the emoji, centered within the container
                 const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="${fontSize}">${emoji}</text></svg>`;
 
