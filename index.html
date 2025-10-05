@@ -268,7 +268,6 @@
             border-radius: 50%;
             background-color: var(--lipagas-green);
             z-index: 5; /* Should be under the z-index of the Google Map Marker overlay */
-            opacity: 0;
             /* Ensure the pulse continues always */
             animation: pulse 2s ease-out infinite; 
         }
@@ -310,7 +309,7 @@
     <div class="absolute right-4 bottom-28 z-40 flex flex-col space-y-4 pointer-events-none">
         <button id="locateMeBtn" onclick="window.app.locateMe()"
             class="pointer-events-auto w-14 h-14 flex items-center justify-center bg-white hover:bg-gray-100 text-[var(--lipagas-green)] rounded-full shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95">
-            <i data-lucide="locate-fixed" class-6 h-6"></i>
+            <i data-lucide="locate-fixed" class="w-6 h-6"></i>
         </button>
     </div>
 
@@ -500,20 +499,22 @@
                     if (response.results.length > 0) {
                         let bestAddress = response.results[0].formatted_address;
 
-                        // Iterate to find a more human-readable address (route, neighborhood, establishment, or political)
+                        // START MODIFICATION: Prioritize human-readable, specific place names
                         for (const result of response.results) {
                             const types = result.types;
                             if (
-                                types.includes('route') ||
-                                types.includes('neighborhood') ||
-                                types.includes('establishment') ||
-                                types.includes('political')
+                                types.includes('establishment') || // Specific business/landmark
+                                types.includes('premise') ||       // Specific building name
+                                types.includes('route') ||         // Street name
+                                types.includes('neighborhood') ||  // Clear area name
+                                types.includes('sublocality')      // Clear sub-area name
                             ) {
-                                // Prefer the first occurrence of a broader, named place
+                                // Prefer the first occurrence of a specific, named place over a generic address or code
                                 bestAddress = result.formatted_address;
                                 break;
                             }
                         }
+                        // END MODIFICATION
 
                         updateLocation(lat, lng, bestAddress);
                     } else {
@@ -724,7 +725,7 @@
 
                 // START MODIFICATION: Use Unicode Location Pin (📍) as the marker icon
                 const emoji = '📍';
-                const size = 88; // CHANGED to 88px as requested
+                const size = 88; // 88px as requested
                 const fontSize = 66; // Adjusted to maintain pin visibility within 88px container
                 // Create an SVG containing the emoji, centered within the container
                 const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="${fontSize}">${emoji}</text></svg>`;
