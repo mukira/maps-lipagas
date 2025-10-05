@@ -268,6 +268,7 @@
             border-radius: 50%;
             background-color: var(--lipagas-green);
             z-index: 5; /* Should be under the z-index of the Google Map Marker overlay */
+            /* Removed initial opacity: 0; to ensure animation is always visible and continuous */
             /* Ensure the pulse continues always */
             animation: pulse 2s ease-out infinite; 
         }
@@ -306,7 +307,7 @@
         </div>
     </div>
 
-    <div class="absolute right-4 bottom-28 z-40 flex flex-col space-y-4 pointer-events-none">
+    <div class="fixed right-4 bottom-28 z-40 flex flex-col space-y-4 pointer-events-none">
         <button id="locateMeBtn" onclick="window.app.locateMe()"
             class="pointer-events-auto w-14 h-14 flex items-center justify-center bg-white hover:bg-gray-100 text-[var(--lipagas-green)] rounded-full shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95">
             <i data-lucide="locate-fixed" class="w-6 h-6"></i>
@@ -499,22 +500,20 @@
                     if (response.results.length > 0) {
                         let bestAddress = response.results[0].formatted_address;
 
-                        // START MODIFICATION: Prioritize human-readable, specific place names
+                        // Iterate to find a more human-readable address (route, neighborhood, establishment, or political)
                         for (const result of response.results) {
                             const types = result.types;
                             if (
-                                types.includes('establishment') || // Specific business/landmark
-                                types.includes('premise') ||       // Specific building name
-                                types.includes('route') ||         // Street name
-                                types.includes('neighborhood') ||  // Clear area name
-                                types.includes('sublocality')      // Clear sub-area name
+                                types.includes('route') ||
+                                types.includes('neighborhood') ||
+                                types.includes('establishment') ||
+                                types.includes('political')
                             ) {
-                                // Prefer the first occurrence of a specific, named place over a generic address or code
+                                // Prefer the first occurrence of a broader, named place
                                 bestAddress = result.formatted_address;
                                 break;
                             }
                         }
-                        // END MODIFICATION
 
                         updateLocation(lat, lng, bestAddress);
                     } else {
@@ -713,7 +712,7 @@
                         { featureType: "road.local", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
                         { featureType: "transit.line", elementType: "geometry", stylers: [{ color: "#e5e5e5" }] },
                         { featureType: "transit.station", elementType: "geometry", stylers: [{ color: "#eeeeee" }] },
-                        { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9c9c9" }] },
+                        { featureType: "water", elementType: "geometry", stylers: [{ color: color: "#c9c9c9" }] },
                         { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
                         // Show all Points of Interest (POI/landmarks) and mute them
                         { featureType: "poi", elementType: "labels", stylers: [{ visibility: "on" }] },
