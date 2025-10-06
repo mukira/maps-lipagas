@@ -266,11 +266,11 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            /* Half the size of the 48px icon for perfect center alignment (aligns with pin tip) */
-            margin-left: -24px; 
-            margin-top: -24px;
-            width: 48px; 
-            height: 48px;
+            /* Half the size of the 58px icon for perfect center alignment (aligns with pin tip) */
+            margin-left: -29px; /* Updated: -58px / 2 */
+            margin-top: -29px;  /* Updated: -58px / 2 */
+            width: 58px;        /* Updated: 48px * 1.2 */
+            height: 58px;       /* Updated: 48px * 1.2 */
             border-radius: 50%;
             /* MODIFIED: Use the new alert red color */
             background-color: var(--alert-red);
@@ -743,8 +743,8 @@
 
                 // START MODIFICATION: Use Unicode Location Pin (📍) as the marker icon
                 const emoji = '📍';
-                const size = 48; // Pin size increased to 48px for better mobile interaction
-                const fontSize = 36; // Adjusted to maintain the ~75% ratio within the 48px container
+                const size = 58; // Pin size increased by 20% (48px * 1.2 = 57.6px, rounded to 58)
+                const fontSize = 43; // Adjusted to maintain the ~75% ratio (36px * 1.2 = 43.2px, rounded to 43)
                 // Create an SVG containing the emoji, centered within the container
                 const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="${fontSize}">${emoji}</text></svg>`;
 
