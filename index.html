@@ -584,6 +584,8 @@
 
             /**
              * Updates the map marker position and view.
+             * @param {google.maps.LatLng} latLng - The new position.
+             * @param {number} [zoom=map.getZoom()] - The new zoom level.
              */
             function updateMarker(latLng, zoom = map.getZoom()) {
                 if (!map || !marker) return;
@@ -715,7 +717,7 @@
                 const initialLat = selectedLocation.lat || DEFAULT_LAT;
                 const initialLng = selectedLocation.lng || DEFAULT_LNG;
                 const initialLatLng = { lat: initialLat, lng: initialLng };
-                const initialZoom = selectedLocation.lat ? 16 : 13; // Zoom in if location was saved
+                const initialZoom = selectedLocation.lat ? 17 : 13; // Zoom in to 17 if location was saved/updated
 
                 map = new google.maps.Map(mapEl, {
                     center: initialLatLng,
@@ -747,14 +749,13 @@
                     ]
                 });
 
-                // START MODIFICATION: Use the PNG image as the marker icon
+                // Marker Icon Configuration (using the uploaded PNG)
                 const markerIcon = {
                     url: MARKER_PNG_URL, // Path to the uploaded PNG file
                     scaledSize: new google.maps.Size(MARKER_SIZE, MARKER_SIZE), 
                     // Anchor at the bottom center of the pin
                     anchor: new google.maps.Point(MARKER_ANCHOR_X_OFFSET, MARKER_ANCHOR_Y_OFFSET), 
                 };
-                // END MODIFICATION
 
                 marker = new google.maps.Marker({
                     map: map,
@@ -772,14 +773,15 @@
                     updateLocation(initialLat, initialLng, '');
                 }
 
-                // Marker Drag Listener
+                // Marker Drag Listener - MODIFIED TO ENFORCE ZOOM 17
                 marker.addListener('dragend', () => {
-                    updateMarker(marker.getPosition(), map.getZoom());
+                    // Pass a hardcoded zoom level (e.g., 17) to ensure a clean zoom-in on drop
+                    updateMarker(marker.getPosition(), 17);
                 });
 
                 // Map Click Listener
                 map.addListener('click', (e) => {
-                    updateMarker(e.latLng, map.getZoom());
+                    updateMarker(e.latLng, 17); // Also enforce zoom 17 on map click
                 });
 
                 // Initialize Places Autocomplete
@@ -821,7 +823,7 @@
                     if (marker) {
                         marker.setPosition(place.geometry.location);
                         map.setCenter(place.geometry.location);
-                        map.setZoom(17);
+                        map.setZoom(17); // Set zoom 17 on autocomplete selection
                     }
 
                     // Update app state and UI, setting the search input value to displayAddress
@@ -861,7 +863,7 @@
                             // SUCCESS
                             const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
                             const latLngObject = new google.maps.LatLng(pos.lat, pos.lng);
-                            updateMarker(latLngObject, 17); // This updates selectedLocation and enables the FAB
+                            updateMarker(latLngObject, 17); // Enforce zoom 17 on geolocation success
 
                             // Temporary success feedback
                             confirmLocationFAB.textContent = "Location Found! ✅";
