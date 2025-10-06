@@ -25,6 +25,9 @@
             --whatsapp-green: #25D366;
             --whatsapp-green-dark: #1DA851;
 
+            /* NEW: Alert red for the pulse effect (Tailwind red-500) */
+            --alert-red: #ef4444; 
+
             /* Stronger shadow for elevation, similar to native apps */
             --shadow-strong: 0 8px 30px rgba(0, 0, 0, 0.2);
         }
@@ -247,12 +250,15 @@
         /* 7. Pulsing Marker Effect */
         @keyframes pulse {
             0% {
-                transform: scale(0.6);
-                opacity: 0.9;
+                transform: scale(1.0); /* Start at the pin size (Strongest at center) */
+                opacity: 1;            /* Highest opacity */
+            }
+            50% {
+                opacity: 0.4;          /* Control fade curve to hold strength longer */
             }
             100% {
-                transform: scale(2.5); 
-                opacity: 0;
+                transform: scale(5.0); /* Expanded scale relative to 48px pin */
+                opacity: 0;            /* Fainter outer region */
             }
         }
 
@@ -260,17 +266,26 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            /* Half the size of the new 88px icon for perfect center alignment */
-            margin-left: -44px; 
-            margin-top: -44px;
-            width: 88px; /* Match the size of the new marker icon */
-            height: 88px;
+            /* Half the size of the 48px icon for perfect center alignment (aligns with pin tip) */
+            margin-left: -24px; 
+            margin-top: -24px;
+            width: 48px; 
+            height: 48px;
             border-radius: 50%;
-            background-color: var(--lipagas-green);
-            z-index: 5; /* Should be under the z-index of the Google Map Marker overlay */
-            /* Removed initial opacity: 0; to ensure animation is always visible and continuous */
-            /* Ensure the pulse continues always */
-            animation: pulse 2s ease-out infinite; 
+            /* MODIFIED: Use the new alert red color */
+            background-color: var(--alert-red);
+            /* FIX: Increased z-index to ensure it appears over the Google Maps marker overlay */
+            z-index: 99; 
+            /* NEW: Start invisible and non-animated */
+            opacity: 0; 
+            animation: none; 
+            transition: opacity 0.5s; /* Smooth fade-in */
+        }
+        
+        /* NEW: Class to activate the pulse after map load */
+        #markerPulse.pulsing {
+            opacity: 1; 
+            animation: pulse 1.5s ease-in infinite;
         }
     </style>
     <meta name="theme-color" content="#047346">
@@ -409,8 +424,8 @@
       "background_color": "#ffffff",
       "theme_color": "#047346",
       "icons": [
-        {"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzA0NzM0NiIvPjxwYXRoIGQ9M00yNTYgNjRjLTc3LjggMC0xNDAgNjIuMi0xNDAgMTQwYzAgMTQ0IDI1NiAyNTYgMjU2IDI1NnMyNTYtMTEyIDI1Ni0yNTZjMC03Ny44LTYyLjItMTQwLTE0MC0xNDB6bTAtMTgwYzI0LjggMCA0NSAyMC4yIDQ1IDQ1cy0yMC4yIDQ1LTQ1IDQ1LTQ1LTIwLjItNDUtNDVzMjAuMi00NSA0NS00NXoiIGZpbGw9IiNmZmYiLz48L2VzZ3Y+"), "sizes": "512x512", "type": "image/svg+xml"},
-        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wBYhy+/3j2b+n/3xcHw+FwOBzOYeQvYJg8DPUJfCoAAAAASUVORK5CYII=", "sizes": "192x192", "type": "image/png"}
+        {"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzA0NzM0NiIvPjxwYXRoIGQ9M00yNTYgNjRjLTc3LjggMC0xNDAgNjIuMi0xNDAgMTQwYzAgMTQ0IDI1NiAyNTYgMjU2IDI1NnMyNTYtMTEyIDI1Ni0yNTZjMC03Ny44LTYyLjItMTQwLTE0MC0xNDB6bTAtMTgwYzI0LjggMCA0NSAyMC4yIDQ1IDQ1cy0yMC4yIDQ1LTQ1IDQ1LTQ1LTIwLjItNDUtNDVzMjAuMi00NSA0NS00NXgiIGZpbGw9IiNmZmYiLz48L2VzZ3Y+"), "sizes": "512x512", "type": "image/svg+xml"},
+        {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUAAAGAAAABgCAYAAADGm5fmAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNElEQVR4nO3bQQqDMAwGYZ/N9A+w2v3qD23U4j9VCC554DABc+5x5bZ+H6/X43E4HA7H59B5b8uX7853Q/wBYhy+/3z2b+n/3xcHw+FwOBzOYeQvYJg8DPUJfCoAAAAASUVORK5CYII=", "sizes": "192x192", "type": "image/png"}
       ]
     }
     </script>
@@ -450,6 +465,8 @@
             const offlineBanner = document.getElementById('offlineBanner');
             const onlineBanner = document.getElementById('onlineBanner');
             const tutorialOverlay = document.getElementById('tutorialOverlay');
+            // NEW: Reference to the pulse marker element
+            const markerPulseEl = document.getElementById('markerPulse');
 
             // --- Local Storage Functions ---
 
@@ -726,8 +743,8 @@
 
                 // START MODIFICATION: Use Unicode Location Pin (📍) as the marker icon
                 const emoji = '📍';
-                const size = 88; // 88px as requested
-                const fontSize = 66; // Adjusted to maintain pin visibility within 88px container
+                const size = 48; // Pin size increased to 48px for better mobile interaction
+                const fontSize = 36; // Adjusted to maintain the ~75% ratio within the 48px container
                 // Create an SVG containing the emoji, centered within the container
                 const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="${fontSize}">${emoji}</text></svg>`;
 
@@ -812,6 +829,9 @@
 
                     // Note: We skip geocodePosition() here because Autocomplete already gives us the best address/name.
                 });
+                
+                // NEW: Start the pulse animation after the map is fully set up
+                markerPulseEl.classList.add('pulsing');
             }
 
             /**
