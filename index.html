@@ -257,7 +257,7 @@
                 opacity: 0.4;          /* Control fade curve to hold strength longer */
             }
             100% {
-                transform: scale(5.0); /* Expanded scale relative to 48px pin */
+                transform: scale(5.0); /* Expanded scale relative to 53px pin */
                 opacity: 0;            /* Fainter outer region */
             }
         }
@@ -266,11 +266,11 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            /* Half the size of the 58px icon for perfect center alignment (aligns with pin tip) */
-            margin-left: -29px; /* Updated: -58px / 2 */
-            margin-top: -29px;  /* Updated: -58px / 2 */
-            width: 58px;        /* Updated: 48px * 1.2 */
-            height: 58px;       /* Updated: 48px * 1.2 */
+            /* Half the size of the 53px icon for perfect center alignment (aligns with pin tip) */
+            margin-left: -27px; /* Updated: -53px / 2 */
+            margin-top: -27px;  /* Updated: -53px / 2 */
+            width: 53px;        /* Updated: 48px * 1.1 */
+            height: 53px;       /* Updated: 48px * 1.1 */
             border-radius: 50%;
             /* MODIFIED: Use the new alert red color */
             background-color: var(--alert-red);
@@ -322,6 +322,24 @@
                 </button>
             </div>
         </div>
+
+        <div id="bannerContainer" class="w-full max-w-lg mx-auto pt-2">
+            <div id="offlineBanner"
+                class="w-full max-w-md mx-auto p-3 text-center bg-red-600 text-white rounded-xl shadow-xl transition-all duration-500 transform -translate-y-12 opacity-0 pointer-events-auto">
+                <p class="text-sm font-semibold flex items-center justify-center">
+                    <i data-lucide="x" class="w-4 h-4 mr-2"></i>
+                    You’re offline. Please reconnect to continue.
+                </p>
+                <p class="text-xs mt-1 font-light">Map and search features require an an active internet connection.</p>
+            </div>
+            <div id="onlineBanner"
+                class="w-full max-w-md mx-auto p-3 text-center bg-green-500 text-white rounded-xl shadow-xl transition-all duration-500 transform -translate-y-12 opacity-0 pointer-events-none mt-2">
+                <p class="text-sm font-semibold flex items-center justify-center">
+                    <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                    You’re online.
+                </p>
+            </div>
+        </div>
     </div>
 
     <div class="absolute right-4 bottom-28 z-40 flex flex-col space-y-4 pointer-events-none">
@@ -329,24 +347,6 @@
             class="pointer-events-auto w-14 h-14 flex items-center justify-center bg-white hover:bg-gray-100 text-[var(--lipagas-green)] rounded-full shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95">
             <i data-lucide="locate-fixed" class="w-6 h-6"></i>
         </button>
-    </div>
-
-    <div class="absolute bottom-36 w-full p-4 z-40 pointer-events-none">
-        <div id="offlineBanner"
-            class="w-full max-w-md mx-auto p-3 text-center bg-red-600 text-white rounded-xl shadow-xl transition-all duration-500 transform translate-y-12 opacity-0 pointer-events-auto">
-            <p class="text-sm font-semibold flex items-center justify-center">
-                <i data-lucide="x" class="w-4 h-4 mr-2"></i>
-                You’re offline. Please reconnect to continue.
-            </p>
-            <p class="text-xs mt-1 font-light">Map and search features require an an active internet connection.</p>
-        </div>
-        <div id="onlineBanner"
-            class="w-full max-w-md mx-auto p-3 text-center bg-green-500 text-white rounded-xl shadow-xl transition-all duration-500 transform translate-y-12 opacity-0 pointer-events-none mt-2">
-            <p class="text-sm font-semibold flex items-center justify-center">
-                <i data-lucide="check" class="w-4 h-4 mr-2"></i>
-                You’re online.
-            </p>
-        </div>
     </div>
 
     <div id="fabContainer" class="p-4" style="bottom: 16px;">
@@ -743,8 +743,8 @@
 
                 // START MODIFICATION: Use Unicode Location Pin (📍) as the marker icon
                 const emoji = '📍';
-                const size = 58; // Pin size increased by 20% (48px * 1.2 = 57.6px, rounded to 58)
-                const fontSize = 43; // Adjusted to maintain the ~75% ratio (36px * 1.2 = 43.2px, rounded to 43)
+                const size = 74; // Pin size increased by 40% from the previous size of 53px (74px)
+                const fontSize = 56; // Adjusted to maintain the ~75% ratio
                 // Create an SVG containing the emoji, centered within the container
                 const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="${fontSize}">${emoji}</text></svg>`;
 
@@ -915,7 +915,8 @@
             // --- Notification Handlers (Banners) ---
 
             function showBanner(element, duration = 0) {
-                element.classList.remove('opacity-0', 'translate-y-12');
+                // Now removes the negative transform and adds translate-y-0
+                element.classList.remove('opacity-0', '-translate-y-12');
                 element.classList.add('opacity-100', 'translate-y-0');
 
                 if (duration > 0) {
@@ -924,8 +925,9 @@
             }
 
             function hideBanner(element) {
+                // Now removes translate-y-0 and adds the negative transform
                 element.classList.remove('opacity-100', 'translate-y-0');
-                element.classList.add('opacity-0', 'translate-y-12');
+                element.classList.add('opacity-0', '-translate-y-12');
             }
 
             function handleOnlineStatus() {
