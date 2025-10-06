@@ -26,7 +26,7 @@
             --whatsapp-green-dark: #1DA851;
 
             /* NEW: Alert red for the pulse effect (Tailwind red-500) */
-            --alert-red: #ef4444; 
+            --alert-red: #ef4444;
 
             /* Stronger shadow for elevation, similar to native apps */
             --shadow-strong: 0 8px 30px rgba(0, 0, 0, 0.2);
@@ -228,64 +228,66 @@
             animation: flash-red 0.5s ease-in-out 2;
         }
 
-        @keyframes bounce {
+        /* 7. Pulsating Circle Animation */
 
-            0%,
-            20%,
-            50%,
-            80%,
-            100% {
-                transform: translateY(0);
-            }
-
-            40% {
-                transform: translateY(-10px);
-            }
-
-            60% {
-                transform: translateY(-5px);
-            }
-        }
-        
-        /* 7. Pulsing Marker Effect */
-        @keyframes pulse {
+        /* Animation Keyframes (using the ripple style you provided) */
+        @keyframes pulse-ripple {
             0% {
-                transform: scale(1.0); /* Start at the pin size (Strongest at center) */
-                opacity: 1;            /* Highest opacity */
+                transform: scale(0.1);
+                opacity: 1;
             }
-            50% {
-                opacity: 0.4;          /* Control fade curve to hold strength longer */
+
+            70% {
+                transform: scale(1);
+                opacity: 0.7;
             }
+
             100% {
-                transform: scale(5.0); /* Expanded scale relative to 53px pin */
-                opacity: 0;            /* Fainter outer region */
+                transform: scale(1.5);
+                opacity: 0;
             }
         }
 
+        /* The container for the pulse, positioned at the screen center */
         #markerPulse {
             position: absolute;
             top: 50%;
             left: 50%;
-            /* Half the size of the 53px icon for perfect center alignment (aligns with pin tip) */
-            margin-left: -27px; /* Updated: -53px / 2 */
-            margin-top: -27px;  /* Updated: -53px / 2 */
-            width: 53px;        /* Updated: 48px * 1.1 */
-            height: 53px;       /* Updated: 48px * 1.1 */
-            border-radius: 50%;
-            /* MODIFIED: Use the new alert red color */
-            background-color: var(--alert-red);
-            /* FIX: Increased z-index to ensure it appears over the Google Maps marker overlay */
-            z-index: 99; 
-            /* NEW: Start invisible and non-animated */
-            opacity: 0; 
-            animation: none; 
-            transition: opacity 0.5s; /* Smooth fade-in */
+            width: 80px;
+            /* Size of the ripple effect */
+            height: 80px;
+            /* Shift only X, aligning the center of the pulse circle with the pin tip */
+            transform: translate(-50%, 0%);
+
+            /* z-index 2 is lower than the Google Map marker z-index (usually 3+), so it sits underneath the pin. */
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            /* Crucial for map interaction */
         }
-        
-        /* NEW: Class to activate the pulse after map load */
+
+        /* The actual visible circle that animates */
+        #markerPulse::after {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: var(--alert-red);
+            /* Shift the visual circle up by half its height to perfectly align its bottom edge with the pin tip */
+            transform: translateY(-50%);
+            animation: none;
+        }
+
+        /* Class to activate the pulse after map load */
         #markerPulse.pulsing {
-            opacity: 1; 
-            animation: pulse 1.5s ease-in infinite;
+            opacity: 0.5;
+            /* Slight opacity to make it subtle */
+        }
+
+        #markerPulse.pulsing::after {
+            animation: pulse-ripple 1.75s ease-out infinite;
         }
     </style>
     <meta name="theme-color" content="#047346">
@@ -295,7 +297,7 @@
 <body class="bg-gray-50">
 
     <div id="map">
-        <div id="markerPulse" class="pointer-events-none"></div> 
+        <div id="markerPulse" class="pointer-events-none"></div>
 
         <div id="mapLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-200 z-0">
             <svg class="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -438,7 +440,7 @@
             // NOTE: Using a placeholder key for demonstration. A real key is required.
             const MAPS_API_KEY = 'AIzaSyDDRWZ7Ay5MzeFMN6ue-6H-wqWFq6-gd7g';
             const TUTORIAL_KEY = 'LipaGasTutorialSeen';
-            const LOCATION_STORAGE_KEY = 'LipaGasLastLocation'; // NEW: Local Storage Key
+            const LOCATION_STORAGE_KEY = 'LipaGasLastLocation';
             const DEFAULT_LAT = -1.286389; // Nairobi, Kenya
             const DEFAULT_LNG = 36.817223;
 
@@ -446,8 +448,7 @@
             let map = null;
             let marker = null;
             let autocomplete = null;
-            // Initialize with null, will be populated by loadLastLocation or defaults
-            let selectedLocation = { lat: null, lng: null, address: '' }; 
+            let selectedLocation = { lat: null, lng: null, address: '' };
             let mapsApiLoaded = false;
             let geocoder = null;
 
@@ -465,38 +466,28 @@
             const offlineBanner = document.getElementById('offlineBanner');
             const onlineBanner = document.getElementById('onlineBanner');
             const tutorialOverlay = document.getElementById('tutorialOverlay');
-            // NEW: Reference to the pulse marker element
-            const markerPulseEl = document.getElementById('markerPulse');
+            const markerPulseEl = document.getElementById('markerPulse'); // Reference to the pulse element
 
             // --- Local Storage Functions ---
 
-            /**
-             * Loads the last saved location from local storage into selectedLocation.
-             */
             function loadLastLocation() {
                 const savedLocation = localStorage.getItem(LOCATION_STORAGE_KEY);
                 if (savedLocation) {
                     try {
                         const loc = JSON.parse(savedLocation);
-                        // Ensure data integrity before using it
                         if (loc.lat !== null && loc.lng !== null && loc.address !== '') {
                             selectedLocation = loc;
-                            // Set the initial search input value
                             searchInput.value = loc.address;
                         }
                     } catch (e) {
                         console.error('Failed to parse saved location from local storage:', e);
-                        localStorage.removeItem(LOCATION_STORAGE_KEY); // Clear bad data
+                        localStorage.removeItem(LOCATION_STORAGE_KEY);
                     }
                 }
             }
-            
+
             // --- Geocoding Functions ---
 
-            /**
-             * Performs reverse geocoding to get a human-readable address from coordinates.
-             * @param {object} latLng - {lat, lng} coordinates object.
-             */
             async function geocodePosition(latLng) {
                 if (!geocoder) {
                     if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
@@ -519,7 +510,6 @@
                     if (response.results.length > 0) {
                         let bestAddress = response.results[0].formatted_address;
 
-                        // Iterate to find a more human-readable address (route, neighborhood, establishment, or political)
                         for (const result of response.results) {
                             const types = result.types;
                             if (
@@ -528,7 +518,6 @@
                                 types.includes('establishment') ||
                                 types.includes('political')
                             ) {
-                                // Prefer the first occurrence of a broader, named place
                                 bestAddress = result.formatted_address;
                                 break;
                             }
@@ -546,22 +535,16 @@
 
             // --- UI/State Management ---
 
-            /**
-             * Updates the application's internal state, UI elements, FAB visibility, AND saves to local storage.
-             */
             function updateLocation(lat, lng, address) {
                 selectedLocation.lat = lat;
                 selectedLocation.lng = lng;
                 selectedLocation.address = address;
 
-                // Save current location to local storage for persistence
                 localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(selectedLocation));
 
-                // Update search input text
                 searchInput.value = address;
                 clearSearchBtn.classList.toggle('hidden', address === '');
 
-                // Control FAB visibility and enable/disable
                 const isLocationSet = !!lat && !!lng;
                 if (isLocationSet) {
                     confirmLocationFAB.classList.remove('hidden-fab');
@@ -571,14 +554,10 @@
                     confirmLocationFAB.disabled = true;
                 }
 
-                // Update preview sheet
                 previewAddressEl.textContent = address || 'Tap a location or search to set.';
                 previewCoordsEl.textContent = isLocationSet ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : '--';
             }
 
-            /**
-             * Updates the map marker position and view.
-             */
             function updateMarker(latLng, zoom = map.getZoom()) {
                 if (!map || !marker) return;
 
@@ -586,7 +565,6 @@
                 map.setCenter(latLng);
                 map.setZoom(zoom);
 
-                // This triggers reverse geocoding to get the address from the new marker position
                 geocodePosition(latLng);
             }
 
@@ -601,13 +579,12 @@
 
             function hideTutorial() {
                 tutorialOverlay.classList.add('hidden');
-                localStorage.setItem(TUTORIAL_KEY, 'true'); // Mark as seen
+                localStorage.setItem(TUTORIAL_KEY, 'true');
             }
 
             // --- Main Flow Handlers ---
 
             function showBottomSheet() {
-                // Check if the location is the default Nairobi center point (simple check)
                 const isDefaultLocation = (
                     Math.abs(selectedLocation.lat - DEFAULT_LAT) < 0.0001 &&
                     Math.abs(selectedLocation.lng - DEFAULT_LNG) < 0.0001 &&
@@ -615,72 +592,49 @@
                 );
 
                 if (isDefaultLocation) {
-                    // Provide visual feedback that a location must be selected
                     const originalText = confirmLocationFAB.textContent;
-                    const originalBg = confirmLocationFAB.style.backgroundColor;
-                    const originalShadow = confirmLocationFAB.style.boxShadow;
 
                     confirmLocationFAB.textContent = "Please Select a Location First";
-                    // Using direct style properties for the flash effect
-                    confirmLocationFAB.style.backgroundColor = '#ef4444'; // Red for error
+                    confirmLocationFAB.style.backgroundColor = '#ef4444';
                     confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(239, 68, 68, 0.7)';
-
                     searchBarEl.classList.add('search-bar-flash');
 
                     setTimeout(() => {
                         confirmLocationFAB.textContent = originalText;
-                        // Reset to original LipaGas green color
                         confirmLocationFAB.style.backgroundColor = '';
-                        confirmLocationFAB.style.boxShadow = originalShadow;
+                        confirmLocationFAB.style.boxShadow = '';
                         searchBarEl.classList.remove('search-bar-flash');
                     }, 1200);
 
-                    return; // Prevent showing the sheet
+                    return;
                 }
 
-                // If location is valid, proceed to show the sheet
                 bottomSheet.classList.add('open');
-                // Hide the FAB and search bar for a clean detail view
                 confirmLocationFAB.classList.add('hidden-fab');
                 document.getElementById('searchContainer').classList.add('opacity-0');
-                // Ensure keyboard is hidden when sheet opens
                 searchInput.blur();
             }
 
             function hideBottomSheet() {
                 bottomSheet.classList.remove('open');
-                // Show the FAB and search bar again
                 confirmLocationFAB.classList.remove('hidden-fab');
                 document.getElementById('searchContainer').classList.remove('opacity-0');
             }
 
-            /**
-             * Formats the message using WhatsApp Markdown and opens WhatsApp.
-             */
             function handleConfirmAndSend() {
                 const { lat, lng, address } = selectedLocation;
-                if (!lat || !lng || !address) {
-                    console.error('Location data missing. Cannot send to WhatsApp.');
-                    return;
-                }
+                if (!lat || !lng || !address) return;
 
-                // True Unicode emojis
                 const pinEmoji = "📍";
                 const mapEmoji = "🗺️";
-
-                // Coordinate format without spacing
                 const coordsString = `${lat.toFixed(5)},${lng.toFixed(5)}`;
 
-                // Use WhatsApp Markdown (* for bold*) and a single newline (\n) for compactness.
                 const message = `${pinEmoji} *Delivery Location:* ${address}\n${mapEmoji} *Coordinates:* ${coordsString}`;
 
-                // Use the standard browser function `encodeURIComponent()` on the full message string.
                 const encodedMessage = encodeURIComponent(message);
                 const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodedMessage}`;
                 window.open(waUrl, "_blank");
             }
-
-
 
 
             // --- Maps API and Initialization ---
@@ -695,8 +649,6 @@
                 script.defer = true;
                 script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&callback=window.app.initMap`;
                 document.head.appendChild(script);
-
-                mapLoader.classList.add('hidden');
             }
 
             function initMap() {
@@ -705,11 +657,10 @@
                     return;
                 }
 
-                // Use saved location or default
                 const initialLat = selectedLocation.lat || DEFAULT_LAT;
                 const initialLng = selectedLocation.lng || DEFAULT_LNG;
                 const initialLatLng = { lat: initialLat, lng: initialLng };
-                const initialZoom = selectedLocation.lat ? 16 : 13; // Zoom in if location was saved
+                const initialZoom = selectedLocation.lat ? 16 : 13;
 
                 map = new google.maps.Map(mapEl, {
                     center: initialLatLng,
@@ -718,7 +669,6 @@
                     streetViewControl: false,
                     fullscreenControl: false,
                     zoomControl: false,
-                    // MODIFIED: Custom style for grayscale appearance with visible, muted landmarks
                     styles: [
                         { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
                         { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -733,28 +683,26 @@
                         { featureType: "transit.station", elementType: "geometry", stylers: [{ color: "#eeeeee" }] },
                         { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9c9c9" }] },
                         { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
-                        // Show all Points of Interest (POI/landmarks) and mute them
                         { featureType: "poi", elementType: "labels", stylers: [{ visibility: "on" }] },
-                        { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] }, // Muted label color
-                        // Removed: { featureType: "poi.business", stylers: [{ visibility: "off" }] } to ensure business names are shown
-                        { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#e3e3e3" }] }, // Light gray parks
+                        { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+                        { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#e3e3e3" }] },
                     ]
                 });
 
-                // START MODIFICATION: Use Unicode Location Pin (📍) as the marker icon
-                const emoji = '📍';
-                const size = 74; // Pin size increased by 40% from the previous size of 53px (74px)
-                const fontSize = 56; // Adjusted to maintain the ~75% ratio
-                // Create an SVG containing the emoji, centered within the container
-                const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="${fontSize}">${emoji}</text></svg>`;
+                // --- START: Custom PNG Icon Definition ---
+                // The PNG icon image data is assumed to be available at this path:
+                const PNG_URL = '3d-map_10740582.png';
+                const PNG_WIDTH = 68; // Estimate the width of your PNG for scaling
+                const PNG_HEIGHT = 68; // Estimate the height of your PNG for scaling
 
                 const markerIcon = {
-                    url: 'data:image/svg+xml;utf-8,' + encodeURIComponent(svgContent),
-                    scaledSize: new google.maps.Size(size, size), 
-                    // Anchor at the bottom center of the icon (half size for X, full size for Y)
-                    anchor: new google.maps.Point(size / 2, size), 
+                    url: PNG_URL,
+                    scaledSize: new google.maps.Size(PNG_WIDTH, PNG_HEIGHT),
+                    // Anchor at the center bottom of the image (assuming the pin tip is in the center)
+                    anchor: new google.maps.Point(PNG_WIDTH / 2, PNG_HEIGHT),
                 };
-                // END MODIFICATION
+                // --- END: Custom PNG Icon Definition ---
+
 
                 marker = new google.maps.Marker({
                     map: map,
@@ -764,28 +712,17 @@
                     icon: markerIcon,
                 });
 
-                // Manually ensure UI is consistent if location was loaded from storage
                 if (selectedLocation.lat) {
                     updateLocation(initialLat, initialLng, selectedLocation.address);
                 } else {
-                    // Initialize state with default location if nothing saved
                     updateLocation(initialLat, initialLng, '');
                 }
 
-                // Marker Drag Listener
-                marker.addListener('dragend', () => {
-                    updateMarker(marker.getPosition(), map.getZoom());
-                });
+                marker.addListener('dragend', () => updateMarker(marker.getPosition(), map.getZoom()));
+                map.addListener('click', (e) => updateMarker(e.latLng, map.getZoom()));
 
-                // Map Click Listener
-                map.addListener('click', (e) => {
-                    updateMarker(e.latLng, map.getZoom());
-                });
-
-                // Initialize Places Autocomplete
                 autocomplete = new google.maps.places.Autocomplete(searchInput, {
                     componentRestrictions: { country: ["ke"] },
-                    // IMPORTANT: Include 'name' to get the human-readable place name
                     fields: ["formatted_address", "geometry", "name"],
                 });
 
@@ -793,129 +730,98 @@
 
                 autocomplete.addListener('place_changed', () => {
                     const place = autocomplete.getPlace();
-                    if (!place.geometry) {
-                        console.error("Place selection failed: No geometry.");
-                        return;
-                    }
+                    if (!place.geometry) return;
 
-                    const lat = place.geometry.location.lat();
-                    const lng = place.geometry.location.lng();
-                    let displayAddress = '';
-
-                    // FIX: Prioritize the selected place's name over the default formatted address (Plus Code)
+                    const location = place.geometry.location;
                     const name = place.name;
                     const formattedAddress = place.formatted_address;
+                    let displayAddress = (name && name !== formattedAddress) ? name : (formattedAddress || "Selected location");
 
-                    if (name && name !== formattedAddress) {
-                        // Use the human-readable name if it's distinct
-                        displayAddress = name;
-                    } else if (formattedAddress) {
-                        // Fallback to the formatted address (e.g., for street addresses)
-                        displayAddress = formattedAddress;
-                    } else {
-                        // Final fallback
-                        displayAddress = "Selected location";
-                    }
+                    const lat = location.lat();
+                    const lng = location.lng();
 
-                    // Move marker, center map, and update state with the preferred address
                     if (marker) {
-                        marker.setPosition(place.geometry.location);
-                        map.setCenter(place.geometry.location);
+                        marker.setPosition(location);
+                        map.setCenter(location);
                         map.setZoom(17);
                     }
 
-                    // Update app state and UI, setting the search input value to displayAddress
                     updateLocation(lat, lng, displayAddress);
-
-                    // Note: We skip geocodePosition() here because Autocomplete already gives us the best address/name.
                 });
-                
+
+                // FIX: Hide the loader only once the map is fully ready.
+                mapLoader.classList.add('hidden');
+
                 // NEW: Start the pulse animation after the map is fully set up
                 markerPulseEl.classList.add('pulsing');
             }
 
-            /**
-             * Uses Geolocation API to find and center the map on the user's current position.
-             * * UX IMPROVEMENT: Provides clear loading, success, and specific error states 
-             * on the FAB (Confirm Location button).
-             */
             function locateMe() {
                 const originalText = confirmLocationFAB.textContent;
 
-                if (navigator.geolocation) {
-                    // 1. Initial Loading State
-                    confirmLocationFAB.disabled = true;
-                    confirmLocationFAB.textContent = "Locating...";
-                    confirmLocationFAB.style.backgroundColor = '#3b82f6'; // Blue for loading (direct style)
-                    confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.7)'; // Blue shadow
-
-                    const resetFAB = (addressFound) => {
-                        confirmLocationFAB.textContent = originalText;
-                        confirmLocationFAB.style.backgroundColor = ''; // Reset to CSS default (lipagas-green)
-                        confirmLocationFAB.style.boxShadow = ''; // Reset to CSS default
-                        confirmLocationFAB.disabled = !addressFound;
-                    };
-
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            // SUCCESS
-                            const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
-                            const latLngObject = new google.maps.LatLng(pos.lat, pos.lng);
-                            updateMarker(latLngObject, 17); // This updates selectedLocation and enables the FAB
-
-                            // Temporary success feedback
-                            confirmLocationFAB.textContent = "Location Found! ✅";
-                            confirmLocationFAB.style.backgroundColor = '#10b981'; // Green for success
-                            confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(16, 185, 129, 0.7)'; // Green shadow
-
-                            setTimeout(() => resetFAB(true), 1500);
-                        },
-                        (error) => {
-                            // ERROR HANDLING: Better UX feedback
-                            let errorMessage;
-                            switch (error.code) {
-                                case error.PERMISSION_DENIED:
-                                    errorMessage = "Enable location, or type the location manually 🚫";
-                                    break;
-                                case error.POSITION_UNAVAILABLE:
-                                    errorMessage = "Location Unavailable 📶. Try searching instead.";
-                                    break;
-                                case error.TIMEOUT:
-                                    errorMessage = "Location timed out ⏳. Try again.";
-                                    break;
-                                default:
-                                    errorMessage = "Location Error ❌. Please select manually.";
-                                    break;
-                            }
-
-                            console.error('Geolocation failed:', error.message);
-
-                            // Temporary error feedback
-                            confirmLocationFAB.textContent = errorMessage;
-                            confirmLocationFAB.style.backgroundColor = '#ef4444'; // Red for error
-                            confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(239, 68, 68, 0.7)'; // Red shadow
-
-                            setTimeout(() => {
-                                // Reset based on whether a location was previously set
-                                resetFAB(!!selectedLocation.lat);
-                            }, 3000); // 3s display for error
-                        },
-                        { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 } 
-                    );
-                } else {
-                    // Browser doesn't support Geolocation
-                    console.log('Geolocation is not supported by your browser.');
-                    // Display persistent error on FAB
-                    confirmLocationFAB.textContent = "Browser Error: Geolocation not supported.";
+                if (!navigator.geolocation) {
+                    confirmLocationFAB.textContent = "Geolocation not supported.";
                     confirmLocationFAB.style.backgroundColor = '#ef4444';
                     confirmLocationFAB.disabled = true;
+                    return;
                 }
+
+                confirmLocationFAB.disabled = true;
+                confirmLocationFAB.textContent = "Locating...";
+                confirmLocationFAB.style.backgroundColor = '#3b82f6';
+                confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.7)';
+
+                const resetFAB = (addressFound) => {
+                    confirmLocationFAB.textContent = originalText;
+                    confirmLocationFAB.style.backgroundColor = '';
+                    confirmLocationFAB.style.boxShadow = '';
+                    confirmLocationFAB.disabled = !addressFound;
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
+                        const latLngObject = new google.maps.LatLng(pos.lat, pos.lng);
+                        updateMarker(latLngObject, 17);
+
+                        confirmLocationFAB.textContent = "Location Found! ✅";
+                        confirmLocationFAB.style.backgroundColor = '#10b981';
+                        confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(16, 185, 129, 0.7)';
+
+                        setTimeout(() => resetFAB(true), 1500);
+                    },
+                    (error) => {
+                        let errorMessage;
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Enable location, or type the location manually 🚫";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Location Unavailable 📶. Try searching instead.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "Location timed out ⏳. Try again.";
+                                break;
+                            default:
+                                errorMessage = "Location Error ❌. Please select manually.";
+                                break;
+                        }
+
+                        confirmLocationFAB.textContent = errorMessage;
+                        confirmLocationFAB.style.backgroundColor = '#ef4444';
+                        confirmLocationFAB.style.boxShadow = '0 8px 20px rgba(239, 68, 68, 0.7)';
+
+                        setTimeout(() => {
+                            resetFAB(!!selectedLocation.lat);
+                        }, 3000);
+                    },
+                    { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
+                );
             }
 
             // --- Notification Handlers (Banners) ---
 
             function showBanner(element, duration = 0) {
-                // Now removes the negative transform and adds translate-y-0
                 element.classList.remove('opacity-0', '-translate-y-12');
                 element.classList.add('opacity-100', 'translate-y-0');
 
@@ -925,7 +831,6 @@
             }
 
             function hideBanner(element) {
-                // Now removes translate-y-0 and adds the negative transform
                 element.classList.remove('opacity-100', 'translate-y-0');
                 element.classList.add('opacity-0', '-translate-y-12');
             }
@@ -954,7 +859,6 @@
             }
 
             function setupListeners() {
-                // Primary listeners
                 confirmLocationFAB.addEventListener('click', showBottomSheet);
 
                 clearSearchBtn.addEventListener('click', () => {
@@ -971,19 +875,14 @@
                     dismissTutorialBtn.addEventListener('click', hideTutorial);
                 }
 
-                // --- KEYBOARD AWARENESS LOGIC V2 ---
-                // Lift FAB higher when search input is focused (keyboard opens)
+                // Keyboard awareness
                 searchInput.addEventListener('focusin', () => {
-                    // Lift high enough to clear most mobile keyboards comfortably
                     fabContainer.style.bottom = '350px';
                 });
 
-                // Lower FAB when search input loses focus (keyboard hides)
                 searchInput.addEventListener('focusout', () => {
-                    // Return the FAB to its original position (16px from bottom edge)
                     fabContainer.style.bottom = '16px';
                 });
-                // --- END KEYBOARD LOGIC ---
 
                 window.addEventListener('online', handleOnlineStatus);
                 window.addEventListener('offline', handleOnlineStatus);
@@ -993,15 +892,11 @@
             document.addEventListener('DOMContentLoaded', () => {
                 registerManifest();
                 setupListeners();
-                
-                // Load saved location first
-                loadLastLocation(); 
 
-                // Load the map immediately (initMap will use the loaded location if available)
-                // This ensures the map loads "as fast as possible" when the link opens.
+                loadLastLocation();
+
                 loadMapsApi();
 
-                // Show the tutorial after everything else is ready
                 showTutorial();
             });
 
